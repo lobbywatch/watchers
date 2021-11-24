@@ -1,0 +1,6 @@
+---
+name: Pure Holding Board Members
+url: https://pureholding.ch/our-company/board-of-directors/
+filter:
+  - element-by-tag: main
+  - html2text
