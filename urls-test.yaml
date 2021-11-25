@@ -4,3 +4,5 @@ url: https://pureholding.ch/our-company/board-of-directors/
 filter:
   - element-by-tag: main
   - html2text
+  - shellpipe: awk '{ print FNR " " $0 }'
+  - shellpipe: bash -c ./replace-all.sh

@@ -2,4 +2,4 @@
   - https://github.com/dgtlmoon/changedetection.io
   - https://github.com/vimagick/dockerfiles/tree/master/urlwatch
   - https://github.com/huginn/huginn
-  
+- consider running a first import without name highlighting and without message to slack then do that in a second round  
