@@ -1,7 +1,8 @@
 ---
-name: Swiss Retail Federation Vorstand
-url: https://www.swiss-retail.ch/organisation/vorstand/
+name: AUNS Vorstand
+url: https://auns.ch/ueber-uns/organisation/
 filter:
-  - css: '#main'
+  - css: '.entry-content > *:not(script)'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
+
