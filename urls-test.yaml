@@ -1,8 +1,8 @@
 ---
-name: AUNS Vorstand
-url: https://auns.ch/ueber-uns/organisation/
+name: Schweizer Brauereiverband Geschäftsstelle
+url: https://bier.swiss/verband/geschaeftsstelle/
 filter:
-  - css: '.entry-content > *:not(script)'
+  - css: '.main'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
