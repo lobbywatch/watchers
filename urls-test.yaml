@@ -1,8 +1,7 @@
 ---
 name: Pure Holding Board Members
-url: https://pureholding.ch/our-company/board-of-directors/
+url: https://www.groupemutuel.ch/de/Groupe-Mutuel/Gesundheitspolitik/Groupe-de-reflexion.html
 filter:
-  - element-by-tag: main
+  - element-by-tag: article
   - html2text
-  - shellpipe: awk '{ print FNR " " $0 }'
   - shellpipe: bash -c ./replace-all.sh
