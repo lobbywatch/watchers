@@ -1,7 +1,7 @@
 ---
-name: Swiss Tobacco Vorstand
-url: https://www.swiss-tobacco.ch/ueber-uns/
+name: Swiss Retail Federation Vorstand
+url: https://www.swiss-retail.ch/organisation/vorstand/
 filter:
-  - css: .post-content
+  - css: '#main'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
