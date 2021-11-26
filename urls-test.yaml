@@ -1,6 +1,6 @@
 ---
-name: Pure Holding Board Members
-url: https://www.groupemutuel.ch/de/Groupe-Mutuel/Gesundheitspolitik/Groupe-de-reflexion.html
+name: BirdLife Geschäftsstelle
+url: https://birdlife.ch/de/content/geschaeftsstellen-kontakte
 filter:
   - element-by-tag: article
   - html2text
