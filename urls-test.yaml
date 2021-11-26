@@ -1,8 +1,8 @@
 ---
-name: Schweizer Brauereiverband Geschäftsstelle
-url: https://bier.swiss/verband/geschaeftsstelle/
+name: GastroSuisse Vorstand
+url: https://www.gastrosuisse.ch/de/verband/portraet/vorstand/
 filter:
-  - css: '.main'
+  - css: '.section-main'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
