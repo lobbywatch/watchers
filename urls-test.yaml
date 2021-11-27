@@ -1,8 +1,8 @@
 ---
-name: GastroSuisse Vorstand
-url: https://www.gastrosuisse.ch/de/verband/portraet/vorstand/
+name: Vision Konsum Geschäftsstelle
+url: https://www.vision-konsum.ch/unsere-geschaeftsstelle
 filter:
-  - css: '.section-main'
+  - css: '#SITE_PAGES'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
