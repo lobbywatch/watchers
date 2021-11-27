@@ -1,8 +1,8 @@
 ---
-name: Vision Konsum Geschäftsstelle
-url: https://www.vision-konsum.ch/unsere-geschaeftsstelle
+name: Handelskammer Zürich - Team
+url: https://www.zhk.ch/de/ueber-uns/team.html
 filter:
-  - css: '#SITE_PAGES'
+  - css: 'main'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
