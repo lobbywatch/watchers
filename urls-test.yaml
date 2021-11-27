@@ -1,8 +1,8 @@
 ---
-name: Handelskammer Zürich - Team
-url: https://www.zhk.ch/de/ueber-uns/team.html
+name: EXPERTsuisse - Politischer Beirat
+url: https://www.expertsuisse.ch/politischer-beirat
 filter:
-  - css: 'main'
+  - css: '.dsarticle_content'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
