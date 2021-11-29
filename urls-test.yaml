@@ -1,8 +1,8 @@
 ---
-name: EXPERTsuisse - Politischer Beirat
-url: https://www.expertsuisse.ch/politischer-beirat
+name: Konsumentenforum - Über uns
+url: https://konsum.ch/de/ueber-uns/
 filter:
-  - css: '.dsarticle_content'
+  - css: 'main'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
