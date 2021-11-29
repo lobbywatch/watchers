@@ -1,8 +1,8 @@
 ---
-name: Konsumentenforum - Über uns
-url: https://konsum.ch/de/ueber-uns/
+name: AGVS - Zentralvorstand
+url: https://www.agvs-upsa.ch/de/verband/zentralvorstand
 filter:
-  - css: 'main'
+  - css: '.section-content'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
