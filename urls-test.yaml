@@ -1,8 +1,8 @@
 ---
-name: strasseschweiz - Vorstand
-url: https://www.strasseschweiz.ch/
+name: Jugendsession - Beirat
+url: https://www.jugendsession.ch/das-projekt/das-forum/der-beirat-der-jugendsession/
 filter:
-  - css: '.people'
+  - css: '.container'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
