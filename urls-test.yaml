@@ -1,8 +1,8 @@
 ---
-name: AGVS - Zentralvorstand
-url: https://www.agvs-upsa.ch/de/verband/zentralvorstand
+name: strasseschweiz - Vorstand
+url: https://www.strasseschweiz.ch/
 filter:
-  - css: '.section-content'
+  - css: '.people'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
