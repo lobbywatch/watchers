@@ -1,8 +1,8 @@
 ---
-name: Jugendsession - Beirat
-url: https://www.jugendsession.ch/das-projekt/das-forum/der-beirat-der-jugendsession/
+name: Berner KMU - Ausschuss
+url: https://www.bernerkmu.ch/leitender-auschuss
 filter:
-  - css: '.container'
+  - css: 'div#team-isotope'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
