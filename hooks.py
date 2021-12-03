@@ -14,14 +14,15 @@ class CustomSlackReporter(reporters.TextReporter):
     __kind__ = 'custom_slack'
 
     def submit(self):
-        slack_token = self.config['token']
-        client = WebClient(token=slack_token)
         text = '\n'.join(super().submit())
-        timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-        response = client.files_upload(
-            channels=self.config['channel'],
-            filetype="diff",
-            content=text,
-            initial_comment="Report " + timestamp,
-            title="report.txt"
-        )
+        if text:
+            slack_token = self.config['token']
+            client = WebClient(token=slack_token)
+            timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+            response = client.files_upload(
+                channels=self.config['channel'],
+                filetype="diff",
+                content=text,
+                initial_comment="Report " + timestamp,
+                title="report.txt"
+            )
