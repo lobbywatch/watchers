@@ -1,8 +1,8 @@
 ---
-name: Berner KMU - Ausschuss
-url: https://www.bernerkmu.ch/leitender-auschuss
+name: digitalswitzerland - Vorstand
+url: https://digitalswitzerland.com/board/
 filter:
-  - css: 'div#team-isotope'
+  - css: 'div.person-info'
   - html2text
   - shellpipe: bash -c ./replace-all.sh
 
