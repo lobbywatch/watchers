@@ -1,6 +1,6 @@
 select distinct concat(vorname, ',', nachname)
 from (
-         select case when zweiter_vorname is not null then concat(vorname, ' ', zweiter_vorname) else vorname end vorname, nachname
+         select case when length(coalesce(zweiter_vorname, '')) > 0 then concat(vorname, ' ', zweiter_vorname) else vorname end vorname, nachname
          from person
                   join zutrittsberechtigung z on person.id = z.person_id
          where now() between coalesce(z.von, now()) and coalesce(z.bis, now())
