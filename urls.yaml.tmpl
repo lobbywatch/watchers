@@ -1,0 +1,11 @@
+---
+name: ${NAME}
+url: ${URL}
+filter:
+  - css:
+      selector: 'body'
+      exclude: 'script, style'
+  - html2text
+      # method: pyhtml2text
+  - shellpipe: bash -c ./replace-all.sh
+
