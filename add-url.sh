@@ -1,4 +1,7 @@
 #!/bin/bash
+if grep "$1" urls.yaml > /dev/null; then
+    echo "URL already added: $1" && exit 0
+fi
 
 export PYTHONIOENCODING=utf-8
 export URL=$1
