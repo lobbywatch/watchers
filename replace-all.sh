@@ -12,9 +12,9 @@ if [[ -z "$NO_REPLACE" ]]; then
 	lobby_fl=$(echo "$lobby" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\1(:?\2)?\\s*\3/' | paste -sd'|' | sed 's/(:?)?//g')
 	lobby_lf=$(echo "$lobby" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\3,?\\s*\1(:?\2)?/' | paste -sd'|' | sed 's/(:?)?//g')
 	tee $tmpfile \
-		| (rg --pcre2 "($parl_fl|$parl_lf)" --replace '🙋${1}🙋' --color never --null-data - || cat $tmpfile) \
+		| (rg -i --pcre2 "($parl_fl|$parl_lf)" --replace '🙋${1}🙋' --color never --null-data - || cat $tmpfile) \
 		| tee $tmpfile2 \
-		| (rg --pcre2 "($lobby_fl|$lobby_lf)" --replace '👻${1}👻' --color never --null-data - || cat $tmpfile2) \
+		| (rg -i --pcre2 "($lobby_fl|$lobby_lf)" --replace '👻${1}👻' --color never --null-data - || cat $tmpfile2) \
 		| grep -zPo "(?s)([\x{1F47B}\x{1F64B}]).*?\1" \
 		| sed -E ":a;\$!{N;ba}; s/[[:blank:]\n\r]+/ /gi" \
 		| tr '\0' '\n'
