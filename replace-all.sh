@@ -4,11 +4,11 @@ tmpfile=$(mktemp /tmp/names.XXXXXX)
 tmpfile2=$(mktemp /tmp/names2.XXXXXX)
 
 if [[ -z "$NO_REPLACE" ]]; then
-	parl=$(awk 'BEGIN{FS=OFS=","} { print $1, gensub(/([^- ]+)[- ]([^- ]+)/, "\\1([- ]\\2)?", "g", $2) }' parliamentarians.csv | sed 's/Delphine/Délphine/g; s/Bellaiche/Bellaïche/g; s/é/[eé]/g; s/è/[eè]/g; s/à/[aà]/g; s/ç/[cç]/g; s/ë/[eë]/g; s/ï/[iï]/g; s/ò/[oò]/g')
+	parl=$(awk 'BEGIN{FS=OFS=","} { print $1, gensub(/([^- ]+)[- ]([^- ]+)/, "\\1([- ]\\2)?", "g", $2) }' parliamentarians.csv | sed 's/Delphine/Délphine/g; s/Bellaiche/Bellaïche/g; s/é/[eé]/g; s/è/[eè]/g; s/à/[aà]/g; s/á/[aá]/g; s/ç/[cç]/g; s/ë/[eë]/g; s/ï/[iï]/g; s/ò/[oò]/g')
 	parl_fl=$(echo "$parl" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\1(:?\2)?\\s*\3/' | paste -sd'|' | sed 's/(:?)?//g')
 	parl_lf=$(echo "$parl" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\3,?\\s*\1(:?\2)?/' | paste -sd'|' | sed 's/(:?)?//g')
 
-	lobby=$(awk 'BEGIN{FS=OFS=","} { print $1, gensub(/([^- ]+)[- ]([^- ]+)/, "\\1([- ]\\2)?", "g", $2) }' lobbyists.csv | sed 's/é/[eé]/g; s/è/[eè]/g; s/à/[aà]/g; s/ç/[cç]/g; s/ë/[eë]/g; s/ï/[iï]/g; s/ò/[oò]/g')
+	lobby=$(awk 'BEGIN{FS=OFS=","} { print $1, gensub(/([^- ]+)[- ]([^- ]+)/, "\\1([- ]\\2)?", "g", $2) }' lobbyists.csv | sed 's/é/[eé]/g; s/è/[eè]/g; s/á/[aá]/g; s/à/[aà]/g; s/ç/[cç]/g; s/ë/[eë]/g; s/ï/[iï]/g; s/ò/[oò]/g')
 	lobby_fl=$(echo "$lobby" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\1(:?\2)?\\s*\3/' | paste -sd'|' | sed 's/(:?)?//g')
 	lobby_lf=$(echo "$lobby" | sed -E 's/([^ ,]+)([^,]+)?,(.+)/\3,?\\s*\1(:?\2)?/' | paste -sd'|' | sed 's/(:?)?//g')
 	tee $tmpfile \
