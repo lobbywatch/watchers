@@ -42,7 +42,7 @@ def handle_some_action(ack, body, respond, logger):
 
 
 @app.action(re.compile("match_at_offset-[0-9]+"))
-def handle_some_action(ack, body, respond, logger):
+def handle_match_checkbox_selection(ack, body, respond, logger):
     ack()
     logger.info(body)
     for b in body["message"]["blocks"]:
