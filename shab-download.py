@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import argparse
 import json
 import os
 import re
-import sys
 from datetime import date
 from pathlib import Path
 
@@ -20,6 +20,11 @@ req_headers = {'Accept': 'application/json'}
 
 colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
 semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
+
+parser = argparse.ArgumentParser(description='Process SHAB publications.')
+parser.add_argument('--date', dest='ref_date', default=date.today().isoformat(), type=date.fromisoformat)
+parser.add_argument('--publ', dest='publ')
+parser.add_argument('--json', dest='json_channel')
 
 
 def unescape_entities(text):
@@ -37,15 +42,17 @@ def unescape_entities(text):
     return text
 
 
-if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        ref_date = date.today()
-    else:
-        ref_date = date.fromisoformat(sys.argv[1])
+def process_publication(publ, format):
+    message = unescape_entities(publ['sogcPublication']['message'])
+    message = re.sub('<FT TYPE=".">([^<]+)</FT>', '\\1', message)
+    return matcher.match(message, format)
 
-    json_channel = None
-    if len(sys.argv) == 3:
-        json_channel = sys.argv[2]
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    ref_date = args.ref_date
+    publ_id = args.publ
+    json_channel = args.json_channel
 
     mydb = mysql.connector.connect(
         host=config["DB_HOST"],
@@ -62,7 +69,7 @@ if __name__ == "__main__":
             select null
             from in_rat
             where parlamentarier_id = pa.id
-            and %(date)s between date_sub(von, interval 2 year) and coalesce(bis, now())
+            and %(date)s <= coalesce(bis, now())
         )
         order by 1, 3
     ''', {'date': ref_date})
@@ -79,7 +86,7 @@ if __name__ == "__main__":
         select distinct p.id, vorname, zweiter_vorname, vorname_kurz, nachname, buergerorte
         from person p
                  join zutrittsberechtigung z on p.id = z.person_id
-        where %(date)s between date_sub(z.von, interval 2 year) and coalesce(z.bis, now())
+        where %(date)s <= coalesce(z.bis, now())
         order by 1, 3
     ''', {'date': ref_date})
     names = []
@@ -88,8 +95,6 @@ if __name__ == "__main__":
                              row[5].split(';') if row[5] else None)
         names.append(n)
     lobbyists = namematcher.NameMatcher(names=names)
-
-    zefix_file = Path(config['ZEFIX_DIR']).joinpath(f'{ref_date.year}/{ref_date}.json') if config.get('ZEFIX_DIR') else None
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
@@ -100,9 +105,16 @@ if __name__ == "__main__":
     else:
         print('error', resp.status_code, resp.content)
 
+    zefix_file = Path(config['ZEFIX_DIR']).joinpath(f'{ref_date.year}/{ref_date}.json') if config.get('ZEFIX_DIR') else None
+
     data = None
-    if zefix_file.is_file():
-        with open(zefix_file, 'r') as f:
+    if publ_id:
+        url = f"https://www.zefix.admin.ch/ZefixPublicREST/api/v1/sogc/{publ_id}"
+        resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
+        if 200 == resp.status_code:
+            data = [resp.json()]
+    elif zefix_file and zefix_file.is_file():
+        with open(zefix_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
     else:
         url = f"https://www.zefix.admin.ch/ZefixPublicREST/api/v1/sogc/bydate/{ref_date}"
@@ -119,7 +131,7 @@ if __name__ == "__main__":
             print('error', resp.status_code, resp.content)
 
     if data:
-        print(f'Processing {len(data)} publications ...')
+        print(f'Processing {len(data)} publications {publ_id if publ_id else f"for {ref_date}"} ...')
 
         text_blocks = []
         current_block = None
@@ -132,54 +144,57 @@ if __name__ == "__main__":
             publId = publ['sogcPublication']['sogcId']
             canton = publ['sogcPublication']['registryOfCommerceCanton']
             registry = publ['sogcPublication']['registryOfCommerceId']
-            format = 'vd' if canton in ('VD', 'GE', 'NE') else 'fr' if canton == 'FR' else 'std'
             journalDate = date.fromisoformat(publ['sogcPublication']['registryOfCommerceJournalDate']).strftime('%d.%m.%Y')
-            message = unescape_entities(publ['sogcPublication']['message'])
-            message = re.sub('<FT TYPE=".">([^<]+)</FT>', '\\1', message)
 
             regCompanyUrl = registries[registry].replace("#", uid)
             zefixPublUrl = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publId}'
 
-            for matcher in [parliamentarians, lobbyists]:
-                emoji = '🙋️' if matcher == lobbyists else '👻'
-                first = True
-                label = None
-                matches = matcher.match(message, format)
-                for m in matches:
-                    desc = m.format(emoji)
-                    if first:
-                        first = False
-                        print()
-                        print(f'{companyName} ({uid}) - {journalDate} ({publId}/{canton}):')
-                        current_block = {'type': 'section',
-                                         'text': {
-                                             'type': 'mrkdwn',
-                                             'text': f'<{regCompanyUrl}|{companyName}> - {journalDate} <{zefixPublUrl}|{publId}>/{canton}'
-                                         },
-                                         'accessory': {
-                                             'type': 'checkboxes',
-                                             'options': [],
-                                             'action_id': f'publication_matches-{publId}'
-                                         }}
-                        text_blocks.append(current_block)
+            formats = ['vd'] if canton in ('VD', 'GE', 'NE') else ['fr', 'vd'] if canton == 'FR' else ['std']
 
-                    if m.label:
-                        print('\t' + m.label + ':')
-                        print('\t\t' + desc)
-                    else:
-                        print('\t' + desc)
+            found = False
+            for format in formats:
+                if found:
+                    break
+                for matcher in [parliamentarians, lobbyists]:
+                    emoji = '🙋️' if matcher == parliamentarians else '👻'
+                    first = True
+                    label = None
+                    for m in process_publication(publ, format):
+                        found = True
+                        desc = m.format(emoji)
+                        if first:
+                            first = False
+                            print()
+                            print(f'{companyName} ({uid}) - {journalDate} ({publId}/{canton}):')
+                            current_block = {'type': 'section',
+                                             'text': {
+                                                 'type': 'mrkdwn',
+                                                 'text': f'<{regCompanyUrl}|{companyName}> - {journalDate} <{zefixPublUrl}|{publId}>/{canton}'
+                                             },
+                                             'accessory': {
+                                                 'type': 'checkboxes',
+                                                 'options': [],
+                                                 'action_id': f'publication_matches-{publId}'
+                                             }}
+                            text_blocks.append(current_block)
 
-                    current_block['accessory']['options'].append({
-                        'text': {
-                            'type': 'plain_text',
-                            'text': m.label if m.label else '???'
-                        },
-                        'description': {
-                            'type': 'mrkdwn',
-                            'text': desc[:147] + (desc[147:] and '...')
-                        },
-                        'value': 'match_at_offset-' + str(m.message_offset)
-                    })
+                        if m.label:
+                            print('\t' + m.label + ':')
+                            print('\t\t' + desc)
+                        else:
+                            print('\t' + desc)
+
+                        current_block['accessory']['options'].append({
+                            'text': {
+                                'type': 'plain_text',
+                                'text': m.label if m.label else '???'
+                            },
+                            'description': {
+                                'type': 'mrkdwn',
+                                'text': desc[:147] + (desc[147:] and '...')
+                            },
+                            'value': 'match_at_offset-' + str(m.message_offset)
+                        })
 
         if text_blocks and json_channel:
             if json_channel == 'slack':

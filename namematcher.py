@@ -43,7 +43,6 @@ class NameMatcher:
         return self._regex[format]
 
     def match(self, message, format='std'):
-        emoji = '🙋️'
         res = []
         for m in self._regex[format].finditer(message):
             for i in m.groupdict().items():
@@ -125,9 +124,9 @@ class NameMatcher:
             buergerorte.append('Bienne')
 
         if format == 'std':
-            result += '(?:' + lastname + '(?:[- ]\\w+)?, (?:\\w+\\. ?)*\\s?' + firstname + ')'
+            result += '(?:' + lastname + '(?:[- ]\\w+)?, (?:\\w+\\. ?)*\\s?' + firstname + '\\b)'
         elif format == 'vd':
-            result += '(?:' + lastname + '(?:(?:\\w+\\. ?)+| )' + firstname + ')'
+            result += '(?:' + lastname + '(?:(?:\\w+\\. ?)+| )' + firstname + '\\b)'
         elif format == 'fr':
             result += '(?:' + firstname + '(?:(?:\\w+\\. ?)+| )' + lastname + ')'
         else:
@@ -149,7 +148,7 @@ class NameMatcher:
             .replace('ç', '[cç]').replace('é', '[eé]').replace('è', '[eè]').replace('ë', '[eë]').replace('ï', '[iï]') \
             .replace('î', '[iî]').replace('ò', '[oò]').replace('ô', '[oô]')
         # if format == 'std':
-        #     print(regex)
+        #     print(r)
         return re.compile(r, re.UNICODE)
 
     def __repr__(self):
