@@ -154,6 +154,8 @@ if __name__ == "__main__":
                 regCompanyUrl = registries[registry].replace("#", uid)
                 zefixPublUrl = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publId}'
 
+                message = unescape_entities(publ['sogcPublication']['message'])
+                message = re.sub('<FT TYPE=".">([^<]+)</FT>', '\\1', message)
                 formats = ['vd'] if canton in ('VD', 'GE', 'NE') else ['fr', 'vd'] if canton == 'FR' else ['std']
 
                 found = False
