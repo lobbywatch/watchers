@@ -20,6 +20,7 @@ req_headers = {'Accept': 'application/json'}
 
 colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
 semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
+ft_type_re = re.compile('<FT TYPE=".">([^<]+)</FT>')
 
 parser = argparse.ArgumentParser(description='Process SHAB publications.')
 parser.add_argument('--date', dest='ref_date', default=date.today().isoformat(), type=date.fromisoformat)
@@ -44,7 +45,7 @@ def unescape_entities(text):
 
 def process_publication(publ, format):
     message = unescape_entities(publ['sogcPublication']['message'])
-    message = re.sub('<FT TYPE=".">([^<]+)</FT>', '\\1', message)
+    message = ft_type_re.sub('\\1', message)
     return matcher.match(message, format)
 
 

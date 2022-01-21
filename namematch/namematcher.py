@@ -28,6 +28,7 @@ class NameMatch:
 
 colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
 semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
+second_lastname_re = re.compile('[- ](.*)')
 
 
 class NameMatcher:
@@ -84,7 +85,7 @@ class NameMatcher:
     def __last_name_pattern(n):
         if n.startswith('de ') or n.startswith('von '):
             return n
-        return re.sub('[- ](.*)', r'(?:[- ]\1)?', n)
+        return second_lastname_re.sub(r'(?:[- ]\1)?', n)
 
     @staticmethod
     def __expand_with_buergerorte(n, format='std'):
