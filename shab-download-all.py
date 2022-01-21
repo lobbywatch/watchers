@@ -13,7 +13,7 @@ import mysql.connector
 import requests
 from dotenv import dotenv_values
 
-import namematcher
+from namematch import namematcher
 
 config = {**dotenv_values(".env"), **os.environ}
 
@@ -92,12 +92,18 @@ if __name__ == "__main__":
         from person p
                  join zutrittsberechtigung z on p.id = z.person_id
         where coalesce(z.bis, now()) >= date '2019-10-01'
+          and buergerorte != 'Unbekannt'
         order by 1, 3
     ''', {'date': ref_date})
     names = []
     for row in mycursor.fetchall():
         n = namematcher.Name(row[0], row[1], row[2].split(' ') if row[2] else None, row[3], row[4],
                              row[5].split(';') if row[5] else None)
+        if n.id == 301:
+            n.nick = None
+            n.middle = None
+            n.first = '(?:Christian|Karoly)'
+            n.last = 'K[öo]pe'
         names.append(n)
     lobbyists = namematcher.NameMatcher(names=names)
 

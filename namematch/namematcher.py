@@ -143,7 +143,7 @@ class NameMatcher:
 
     @staticmethod
     def __json_to_regex(names, format='std'):
-        r = '\\s(?:' + '|'.join(map(lambda n: NameMatcher.__expand_with_buergerorte(n, format), names)) + ')\\b'
+        r = '(?:^|\\s)(?:' + '|'.join(map(lambda n: NameMatcher.__expand_with_buergerorte(n, format), names)) + ')\\b'
         r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '[aà]').replace('á', '[aá]') \
             .replace('ç', '[cç]').replace('é', '[eé]').replace('è', '[eè]').replace('ë', '[eë]').replace('ï', '[iï]') \
             .replace('î', '[iî]').replace('ò', '[oò]').replace('ô', '[oô]')
