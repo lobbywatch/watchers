@@ -92,7 +92,7 @@ if __name__ == "__main__":
         from person p
                  join zutrittsberechtigung z on p.id = z.person_id
         where coalesce(z.bis, now()) >= date '2019-10-01'
-          and buergerorte != 'Unbekannt'
+          and coalesce(buergerorte, '') != 'Unbekannt'
         order by 1, 3
     ''', {'date': ref_date})
     names = []
