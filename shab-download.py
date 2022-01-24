@@ -24,7 +24,7 @@ colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
 semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
 ft_type_re = re.compile('<FT TYPE=".">([^<]+)</FT>')
 content_key_split_re = re.compile(
-    '\. (Beginn|Fusion|Data dello statuto|Date des statuts|Statutendatum|Modification des statuts|Statutenänderung|Statuti modificati|Gründungsstatuten|Statuts|Capital|Capital social|Capitale sociale|Stammkapital|Stammkapital neu|Name neu|Nouveau nom|Nuovo nome|Firma neu|Neue Firma|Nuova ditta|Actions|Aktien|Azioni|Aktien neu|Nouvelles actions|Nuove azioni|Aktienkapital|Capitale azionario|Aktienkapital neu|Nuovo capitale azionario|Vinkulierung|Vinkulierung neu|Nuove traduzioni della ditta|Uebersetzungen der Firma neu|Capitale azionario liberato|Liberierung Aktienkapital|Liberierung Aktienkapital neu|Nuovo capitale azionario liberato|Nouveau siège|Nuova sede|Sitz neu|Domizil neu|But|Scopo|Zweck|Neuer Zweck|Nouveau but|Nouvelle raison de commerce|Nuovo scopo|Zweck neu|Mitteilungen neu|Nouvelles communications|Nuove comunicazioni|Mittel neu|Ausgeschiedene Personen und erloschene Unterschriften|Persone dimissionarie e firme cancellate|Personne radiée|Personne\\(s\\) et signature(s) radiée(s)|Eingetragene Person|Eingetragene Personen|Eingetragene Personen neu oder mutierend|Inscription ou modification de personne(s)|Neu eingetragene Person|Neu eingetragene Personen|Nouvelle gérante|Nouvelle personne inscrite|Nouvelles personnes inscrites|Nuove persone iscritte o modifiche|Persone iscritte|Personne inscrite|Personne inscrite modifiée|Personne(s) inscrite(s)|Personne(s) inscrite(s)|Personnes inscrites|Eingetragene Person geändert|Eingetragene Personen geändert|Nouvelle succursale|Nuova succursale|Zweigniederlassung neu|Altri indirizzi|Autre adresse|Nouvelle autre adresse|Weitere Adresse|Weitere Adressen|Adresse de liquidation|Liquidationsadresse|Sitzverlegung nach|Qualifizierte Tatbestände neu|Urkundenänderung|Neue Sitzbezeichnung|Nouvelle raison sociale|Nuova ragione sociale|Nouvelle forme de droit|Nouvelle nature juridique|Rechtsform neu|Administration|Aufsichtsbehörde neu|Firma Hauptsitz neu|Hauptsitz neu|Gelöschte Person|Gelöschte Personen|Umwandlung|Organisation neu|Nouvel organe de révision|Vermögensübertragung|Neue Identifikationsnummer Hauptsitz|UID neu|Gegenleistung|Organe de publication|Organo di pubblicazione|Publikationsorgan|Nouvel organe de publication|Nuovo organo di pubblicazione|Publikationsorgan neu|Adresse neu|Neue Adresse|Nouvelle adresse|Nuovo recapito|Löschungsgrund|Firma am neuen Sitz|Angaben zur Zweigniederlassung neu|Statutarische Vorrechte neu|Pflichten neu|Partizipationsscheine neu|Uebersetzungen des Namens neu|Partizipationskapital neu|Bemerkungen zum Hauptsitz neu|Liberierung Partizipationskapital neu|Communication aux actionnaires|Communications aux actionnaires|Mitteilung an die Aktionäre|Abspaltung|Statuten neu|Rechtsform Hauptsitz neu|Liquidationsdomizil|Kapital Hauptsitz neu|Vollständige Adresse|Registrierung Hauptsitz neu|Inhaber|Titulaire|Schuldenruf|Postadresse neu|Kommanditsumme neu|Bisherige Firma|Associées-gérantes avec signature individuelle|Gérants avec signature individuelle|Conseil de fondation|Organe de révision|Membres du comité|Personne\\(s\\) inscrite\\(s\\)|Associés|Inscription ou modification de personne\\(s\\)|Comité de direction|Organisation|Membres du comité de direction|Comité|Associé-gérant avec signature individuelle):'.encode(
+    '\. (Beginn|Fusion|Data dello statuto|Date des statuts|Statutendatum|Modification des statuts|Statutenänderung|Statuti modificati|Gründungsstatuten|Statuts|Capital|Capital social|Capitale sociale|Stammkapital|Stammkapital neu|Name neu|Nouveau nom|Nuovo nome|Firma neu|Neue Firma|Nuova ditta|Actions|Aktien|Azioni|Aktien neu|Nouvelles actions|Nuove azioni|Aktienkapital|Capitale azionario|Aktienkapital neu|Nuovo capitale azionario|Vinkulierung|Vinkulierung neu|Nuove traduzioni della ditta|Uebersetzungen der Firma neu|Capitale azionario liberato|Liberierung Aktienkapital|Liberierung Aktienkapital neu|Nuovo capitale azionario liberato|Nouveau siège|Nuova sede|Sitz neu|Domizil neu|But|Scopo|Zweck|Neuer Zweck|Nouveau but|Nouvelle raison de commerce|Nuovo scopo|Zweck neu|Mitteilungen neu|Nouvelles communications|Nuove comunicazioni|Mittel neu|Ausgeschiedene Personen und erloschene Unterschriften|Persone dimissionarie e firme cancellate|Personne radiée|Personne\\(s\\) et signature(s) radiée(s)|Eingetragene Person|Eingetragene Personen|Eingetragene Personen neu oder mutierend|Inscription ou modification de personne(s)|Neu eingetragene Person|Neu eingetragene Personen|Nouvelle gérante|Nouvelle personne inscrite|Nouvelles personnes inscrites|Nuove persone iscritte o modifiche|Persone iscritte|Personne inscrite|Personne inscrite modifiée|Personne(s) inscrite(s)|Personne(s) inscrite(s)|Personnes inscrites|Eingetragene Person geändert|Eingetragene Personen geändert|Nouvelle succursale|Nuova succursale|Zweigniederlassung neu|Altri indirizzi|Autre adresse|Nouvelle autre adresse|Weitere Adresse|Weitere Adressen|Adresse de liquidation|Liquidationsadresse|Sitzverlegung nach|Qualifizierte Tatbestände neu|Urkundenänderung|Neue Sitzbezeichnung|Nouvelle raison sociale|Nuova ragione sociale|Nouvelle forme de droit|Nouvelle nature juridique|Rechtsform neu|Administration|Aufsichtsbehörde neu|Firma Hauptsitz neu|Hauptsitz neu|Gelöschte Person|Gelöschte Personen|Umwandlung|Organisation neu|Nouvel organe de révision|Vermögensübertragung|Neue Identifikationsnummer Hauptsitz|UID neu|Gegenleistung|Organe de publication|Organo di pubblicazione|Publikationsorgan|Nouvel organe de publication|Nuovo organo di pubblicazione|Publikationsorgan neu|Adresse neu|Neue Adresse|Nouvelle adresse|Nuovo recapito|Löschungsgrund|Firma am neuen Sitz|Angaben zur Zweigniederlassung neu|Statutarische Vorrechte neu|Pflichten neu|Partizipationsscheine neu|Uebersetzungen des Namens neu|Partizipationskapital neu|Bemerkungen zum Hauptsitz neu|Liberierung Partizipationskapital neu|Communication aux actionnaires|Communications aux actionnaires|Mitteilung an die Aktionäre|Abspaltung|Statuten neu|Rechtsform Hauptsitz neu|Liquidationsdomizil|Kapital Hauptsitz neu|Vollständige Adresse|Registrierung Hauptsitz neu|Inhaber|Titulaire|Schuldenruf|Postadresse neu|Kommanditsumme neu|Bisherige Firma|Associées-gérantes avec signature individuelle|Gérants avec signature individuelle|Conseil de fondation|Organe de révision|Membres du comité|Personne\\(s\\) inscrite\\(s\\)|Associés|Inscription ou modification de personne\\(s\\)|Comité de direction|Organisation|Membres du comité de direction|Comité|Associé-gérant avec signature individuelle|Nouveaux gérants|Nouveau membre du conseil de fondation avec signature collective à deux|Personne\\(s\\) et signature\\(s\\) radiée\\(s\\)|Nouveaux membres du conseil de fondation|Associé-gérant):'.encode(
         'utf-8'), re.IGNORECASE)
 
 parser = argparse.ArgumentParser(description='Process SHAB publications.')
@@ -65,7 +65,7 @@ def process_publication(publ, format):
     return matcher.match(message, format)
 
 
-def process_publication_by_key(publ, format):
+def process_publication_by_key(publ, matcher, format):
     message = unescape_entities(publ['sogcPublication']['message'])
     message_bytes = memoryview(ft_type_re.sub('\\1', message).encode('utf-8'))
     ms = []
@@ -80,8 +80,7 @@ def process_publication_by_key(publ, format):
             start = match.end()
         ms += matcher.match_content(message_bytes[start:], key, start, format)
     except StopIteration:
-        # print(f"{publ['companyShort']['ehraid']}: {publ['sogcPublication']['sogcId']}")
-        pass
+        ms += matcher.match_content(message_bytes, b'Unzugeordnet', 0, format)
     return ms
 
 
@@ -122,7 +121,7 @@ def create_lobbyist_matcher(mycursor, ref_date):
     names = []
     for row in mycursor.fetchall():
         if row[0] == 301:
-            n = namematcher.Name((PersonType.LOBBYIST, row[0]), '(?:Christian|Karoly)', None, None, 'K[öo]pe',
+            n = namematcher.Name((PersonType.LOBBYIST, row[0]), '(?:Christian|Karoly)', None, None, 'K(?:o|ö)pe',
                                  tuple(row[5].split(';')) if row[5] else None)
         else:
             n = namematcher.Name((PersonType.LOBBYIST, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
@@ -378,7 +377,7 @@ if __name__ == "__main__":
             if found:
                 break
             for matcher in [parliamentarians, lobbyists]:
-                matches = process_publication_by_key(publ, format)
+                matches = process_publication_by_key(publ, matcher, format)
                 for m in matches:
                     for proc in processors:
                         proc.process(publ, m)

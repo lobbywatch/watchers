@@ -11,10 +11,10 @@ AnyStr = str | bytes
 class Name:
     id: Any
     first: str
-    middle: tuple[str]
+    middle: tuple[str, ...]
     nick: str
     last: str
-    citizenships: tuple[str]
+    citizenships: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -87,29 +87,29 @@ class NameMatcher:
         return res
 
     def match_content(self, message, label, offset, format):
+        # print(str(label, "utf-8"), str(message, "utf-8"))
         res = []
         matches = semicolon_re.finditer(message)
+        regex = self._regex[format]
         try:
             idx = 0
             for match in matches:
-                for m in self._regex[format].finditer(message[idx:match.start()]):
-                    for i in m.groupdict().items():
-                        if i[1]:
-                            name = self._names_idx[int(i[0][1:])]
-                            start = m.start(i[0])
-                            end = m.end(i[0])
-                            res.append(NameMatch(name, label, message[idx:match.start()], offset + idx, start, end))
+                component = message[idx:match.start()]
+                self.match_content_component(component, regex, idx, label, offset, res)
                 idx = match.end()
-            for m in self._regex[format].finditer(message[idx:]):
-                for i in m.groupdict().items():
-                    if i[1]:
-                        name = self._names_idx[int(i[0][1:])]
-                        start = m.start(i[0])
-                        end = m.end(i[0])
-                        res.append(NameMatch(name, label, message[idx:], offset + idx, start, end))
+            self.match_content_component(message[idx:], regex, idx, label, offset, res)
         except StopIteration:
             pass
         return res
+
+    def match_content_component(self, component, regex, idx, label, offset, res):
+        for m in regex.finditer(component):
+            for i in m.groupdict().items():
+                if i[1]:
+                    name = self._names_idx[int(i[0][1:])]
+                    start = m.start(i[0])
+                    end = m.end(i[0])
+                    res.append(NameMatch(name, label, component, offset + idx, start, end))
 
     @staticmethod
     def __last_name_pattern(n):
@@ -154,11 +154,11 @@ class NameMatcher:
             buergerorte.append('Bienne')
 
         if format == 'std':
-            result += '(?:' + lastname + '(?:[- ]\\w+)?, (?:\\w+\\. ?)*\\s?' + firstname + '\\b)'
+            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '\\b)'
         elif format == 'vd':
-            result += '(?:' + lastname + '(?:(?:\\w+\\. ?)+| )' + firstname + '\\b)'
+            result += '(?:' + lastname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + firstname + '\\b)'
         elif format == 'fr':
-            result += '(?:' + firstname + '(?:(?:\\w+\\. ?)+| )' + lastname + ')'
+            result += '(?:' + firstname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         else:
             raise Exception(f'Unknown format: {format}')
 
@@ -174,9 +174,9 @@ class NameMatcher:
 
     def __json_to_regex(self, names, format='std'):
         r = '(?:^|\\s)(?:' + '|'.join(map(lambda n: self.__expand_with_buergerorte(n, format), names)) + ')\\b'
-        r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '[aà]').replace('á', '[aá]') \
-            .replace('ç', '[cç]').replace('é', '[eé]').replace('è', '[eè]').replace('ë', '[eë]').replace('ï', '[iï]') \
-            .replace('î', '[iî]').replace('ò', '[oò]').replace('ô', '[oô]')
+        r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '(?:a|à)').replace('á', '(?:a|á)') \
+            .replace('ç', '(?:c|ç)').replace('é', '(?:e|é)').replace('è', '(?:e|è)').replace('ë', '(?:e|ë)') \
+            .replace('ï', '(?:i|ï)').replace('î', '(?:i|î)').replace('ò', '(?:o|ò)').replace('ô', '(?:o|ô)')
         # if format == 'std':
         #     print(r)
         return re.compile(r.encode('utf-8'))
