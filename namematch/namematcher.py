@@ -1,44 +1,49 @@
 from dataclasses import dataclass
+from typing import Any
 
 import re
 
 
-@dataclass
+AnyStr = str | bytes
+
+
+@dataclass(frozen=True)
 class Name:
-    id: int
+    id: Any
     first: str
-    middle: list[str]
+    middle: tuple[str]
     nick: str
     last: str
-    citizenships: list[str]
+    citizenships: tuple[str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NameMatch:
     name: Name
-    label: str
-    message: str
+    label: AnyStr
+    message: AnyStr
     message_offset: int
     start: int
     end: int
 
     def format(self, emoji):
-        return f'{self.message[0:self.start]}{emoji}{self.message[self.start:self.end]}{emoji}{self.message[self.end:]}'.strip()
+        return f'{str(self.message[0:self.start], "utf-8")}{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}{str(self.message[self.end:], "utf-8")}'.strip()
 
 
-colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
-semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
+colon_re = re.compile(b'(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
+semicolon_re = re.compile(b'(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
 second_lastname_re = re.compile('[- ](.*)')
 
 
 class NameMatcher:
     def __init__(self, names: list[Name]):
         self._names_idx = {}
-        for n in names:
-            self._names_idx[n.id] = n
-        self._regex = {'std': NameMatcher.__json_to_regex(names, format='std'),
-                      'vd': NameMatcher.__json_to_regex(names, format='vd'),
-                      'fr': NameMatcher.__json_to_regex(names, format='fr')}
+        for idx, n in enumerate(names):
+            self._names_idx[idx] = n
+            self._names_idx[n] = idx
+        self._regex = {'std': self.__json_to_regex(names, format='std'),
+                      'vd': self.__json_to_regex(names, format='vd'),
+                      'fr': self.__json_to_regex(names, format='fr')}
 
     def regex(self, format='std'):
         return self._regex[format]
@@ -81,17 +86,41 @@ class NameMatcher:
                     res.append(NameMatch(name, label, message[start:end], start, m.start(i[0]) - start, m.end(i[0]) - start))
         return res
 
+    def match_content(self, message, label, offset, format):
+        res = []
+        matches = semicolon_re.finditer(message)
+        try:
+            idx = 0
+            for match in matches:
+                for m in self._regex[format].finditer(message[idx:match.start()]):
+                    for i in m.groupdict().items():
+                        if i[1]:
+                            name = self._names_idx[int(i[0][1:])]
+                            start = m.start(i[0])
+                            end = m.end(i[0])
+                            res.append(NameMatch(name, label, message[idx:match.start()], offset + idx, start, end))
+                idx = match.end()
+            for m in self._regex[format].finditer(message[idx:]):
+                for i in m.groupdict().items():
+                    if i[1]:
+                        name = self._names_idx[int(i[0][1:])]
+                        start = m.start(i[0])
+                        end = m.end(i[0])
+                        res.append(NameMatch(name, label, message[idx:], offset + idx, start, end))
+        except StopIteration:
+            pass
+        return res
+
     @staticmethod
     def __last_name_pattern(n):
         if n.startswith('de ') or n.startswith('von '):
             return n
-        return second_lastname_re.sub(r'(?:[- ]\1)?', n)
+        return second_lastname_re.sub('(?:[- ]\1)?', n)
 
-    @staticmethod
-    def __expand_with_buergerorte(n, format='std'):
-        result = '(?P<_' + str(n.id) + '>'
+    def __expand_with_buergerorte(self, n, format='std'):
+        result = '(?P<_' + str(self._names_idx[n]) + '>'
 
-        lastname = NameMatcher.__last_name_pattern(n.last)
+        lastname = self.__last_name_pattern(n.last)
         firstname = n.first + '(?:' + ' '.join(n.middle) + ')?' if n.middle else n.first
         buergerorte = list(map(lambda o: (o if o.find('(') == -1 else o[0:o.find('(')]).strip(), n.citizenships)) if n.citizenships else []
         if 'Zürich' in buergerorte:
@@ -134,6 +163,7 @@ class NameMatcher:
             raise Exception(f'Unknown format: {format}')
 
         if buergerorte:
+            # TODO consider supporting negative lookahead like in `(?!Gaga\b|Gugu\b)`
             if len(buergerorte) > 1:
                 result += '[^:;]+?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) (?:' + \
                           '|'.join(buergerorte) + ')'
@@ -142,15 +172,14 @@ class NameMatcher:
 
         return result + ')'
 
-    @staticmethod
-    def __json_to_regex(names, format='std'):
-        r = '(?:^|\\s)(?:' + '|'.join(map(lambda n: NameMatcher.__expand_with_buergerorte(n, format), names)) + ')\\b'
+    def __json_to_regex(self, names, format='std'):
+        r = '(?:^|\\s)(?:' + '|'.join(map(lambda n: self.__expand_with_buergerorte(n, format), names)) + ')\\b'
         r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '[aà]').replace('á', '[aá]') \
             .replace('ç', '[cç]').replace('é', '[eé]').replace('è', '[eè]').replace('ë', '[eë]').replace('ï', '[iï]') \
             .replace('î', '[iî]').replace('ò', '[oò]').replace('ô', '[oô]')
         # if format == 'std':
         #     print(r)
-        return re.compile(r, re.UNICODE)
+        return re.compile(r.encode('utf-8'))
 
     def __repr__(self):
         return str(self._names_idx)
