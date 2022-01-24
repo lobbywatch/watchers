@@ -633,3 +633,31 @@ where (nachname, vorname) = ('Grüter', 'Marco');
 update person
 set buergerorte = 'Unbekannt'
 where (nachname, vorname) = ('Wittwer', 'Jürg');
+
+update person
+set buergerorte = 'Zuzwil (SG)'
+where (nachname, vorname) = ('Karrer', 'David');
+
+update person
+set buergerorte = 'Unterentfelden'
+where (nachname, vorname) = ('Dätwyler', 'Martin');
+
+update person
+set buergerorte = 'Egerkingen'
+where (nachname, vorname) = ('Wagner', 'Che');
+
+update person
+set buergerorte = 'Wolhusen'
+where (nachname, vorname) = ('Wicki', 'Janine');
+
+update person
+set buergerorte = 'Buchholterberg'
+where (nachname, vorname) = ('Schneider', 'Henrique');
+
+update person
+set buergerorte = 'Basel'
+where (nachname, vorname) = ('Stückelberger', 'Ulrich');
+
+update person
+set buergerorte = 'Auswil'
+where (nachname, vorname) = ('Flückiger', 'Jan');
