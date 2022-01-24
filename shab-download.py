@@ -331,7 +331,6 @@ if __name__ == "__main__":
         data = list(data)
 
     ref_date = args.from_date if args.from_date else data[0]['sogcPublication']['registryOfCommerceJournalDate'] if args.publ else args.ref_date
-    ref_date = date.fromisoformat('2018-06-01')
     parliamentarians = create_parliamentarian_matcher(cursor, ref_date)
     lobbyists = create_lobbyist_matcher(cursor, ref_date)
 
