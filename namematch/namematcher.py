@@ -4,7 +4,7 @@ from typing import Any
 import re
 
 
-AnyStr = str | bytes
+# AnyStr = str | bytes
 
 
 @dataclass(frozen=True)
@@ -20,8 +20,8 @@ class Name:
 @dataclass(frozen=True)
 class NameMatch:
     name: Name
-    label: AnyStr
-    message: AnyStr
+    label: bytes # AnyStr
+    message: bytes # AnyStr
     message_offset: int
     start: int
     end: int
