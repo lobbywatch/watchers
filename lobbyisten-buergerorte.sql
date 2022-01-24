@@ -35,7 +35,7 @@ set buergerorte = 'Escholzmatt-Marbach'
 where (nachname, vorname) = ('Hofstetter', 'Urs');
 
 update person p
-set buergerorte = 'Hauenstein-Ifenthal'
+set buergerorte = 'Hauenstein-Ifenthal;Hägendorf'
 where (nachname, vorname) = ('Kamber', 'Christoph');
 
 update person p
