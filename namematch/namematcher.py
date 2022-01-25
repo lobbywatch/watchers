@@ -155,9 +155,9 @@ class NameMatcher:
             buergerorte.append('Bienne')
 
         if format == 'std':
-            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '(?=[;, ]))'
+            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '(?=[;, ]|$))'
         elif format == 'vd':
-            result += '(?:' + lastname + ' (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]))'
+            result += '(?:' + lastname + ' (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]|$))'
         elif format == 'fr':
             result += '(?:' + firstname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         else:

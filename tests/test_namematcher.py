@@ -19,8 +19,8 @@ class TestNameMatcher(unittest.TestCase):
 
     def test_kope_03(self):
         name = namematcher.Name(1, '(?:Christian|Karoly)', None, None, 'K(?:o|ö)pe', None)
-        self.assertMatch(name, 'Kope, Christian')
         self.assertMatch(name, 'Köpe, Christian')
+        self.assertMatch(name, 'Kope, Christian')
         self.assertMatch(name, 'Kope, Karoly')
         self.assertMatch(name, 'Kope, Karoly Christian')
         self.assertMatch(name, 'Kope, Karoly Christian Dr.')
@@ -40,7 +40,7 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'Laurent', None, None, 'Wehrli', ('Montreux', 'Küttigen'))
         self.assertFullMatch(name, 'Wehrli Laurent, de et à Montreux', format='vd')
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_hayoz_1004707520(self):
         name = namematcher.Name(1, 'Jérôme', None, None, 'Hayoz', ('Kleinbösingen',))
         self.assertMatch(name, "Lassausaie Gwenaël, maintenant domicilié à Ville-la-Grand, F, président, et Hayoz Jérôme, jusqu'ici gérants, lesquels continuent de signer individuellement", format='vd')
@@ -49,6 +49,10 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'Yvonne', None, None, 'Feri', ('Hedingen',))
         self.assertMatch(name, "Feri Yvonne, de Hedingen, à Wettingen", format='vd')
 
+    def test_quervain_1005339837(self):
+        name = namematcher.Name(1, 'Anna', None, None, 'De Quervain', None)
+        self.assertNoMatch(name, "De Cristofaro, Anna, von Küssnacht (SZ)")
+
     def test_jenny_1004646888(self):
         name = namematcher.Name(1, 'René', None, None, 'Jenny', ('Tentlingen',))
         self.assertMatch(name, "Jenny René, de Tentlingen", format='vd')
@@ -56,9 +60,13 @@ class TestNameMatcher(unittest.TestCase):
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
 
+    def assertNoMatch(self, name, str, format='std'):
+        matcher = namematcher.NameMatcher([name])
+        matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format)
+        self.assertEqual(0, len(matches))
+
     def assertMatch(self, name, str, end=None, format='std'):
         matcher = namematcher.NameMatcher([name])
-        print(str.encode(encoding='utf-8'))
         matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format)
         self.assertEqual(1, len(matches))
         self.assertEqual(name, matches[0].name)
