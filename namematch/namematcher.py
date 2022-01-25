@@ -154,9 +154,9 @@ class NameMatcher:
             buergerorte.append('Bienne')
 
         if format == 'std':
-            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '\\b)'
+            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '(?=[;, ]))'
         elif format == 'vd':
-            result += '(?:' + lastname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + firstname + '\\b)'
+            result += '(?:' + lastname + ' (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]))'
         elif format == 'fr':
             result += '(?:' + firstname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         else:
@@ -165,10 +165,10 @@ class NameMatcher:
         if buergerorte:
             # TODO consider supporting negative lookahead like in `(?!Gaga\b|Gugu\b)`
             if len(buergerorte) > 1:
-                result += '[^:;]+?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) (?:' + \
+                result += '[^:;]{0,30}?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) (?:' + \
                           '|'.join(buergerorte) + ')'
             else:
-                result += '[^:;]+?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) ' + buergerorte[0]
+                result += '[^:;]{0,30}?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) ' + buergerorte[0]
 
         return result + ')'
 
