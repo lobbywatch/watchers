@@ -49,11 +49,16 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'Yvonne', None, None, 'Feri', ('Hedingen',))
         self.assertMatch(name, "Feri Yvonne, de Hedingen, à Wettingen", format='vd')
 
+    def test_jenny_1004646888(self):
+        name = namematcher.Name(1, 'René', None, None, 'Jenny', ('Tentlingen',))
+        self.assertMatch(name, "Jenny René, de Tentlingen", format='vd')
+
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
 
     def assertMatch(self, name, str, end=None, format='std'):
         matcher = namematcher.NameMatcher([name])
+        print(str.encode(encoding='utf-8'))
         matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format)
         self.assertEqual(1, len(matches))
         self.assertEqual(name, matches[0].name)
