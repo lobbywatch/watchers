@@ -661,3 +661,35 @@ where (nachname, vorname) = ('Stückelberger', 'Ulrich');
 update person
 set buergerorte = 'Auswil'
 where (nachname, vorname) = ('Flückiger', 'Jan');
+
+update person
+set buergerorte = 'Founex'
+where (nachname, vorname) = ('Fantino', 'Olivier');
+
+update person
+set buergerorte = 'Courroux'
+where (nachname, vorname) = ('Fleury', 'Mathieu');
+
+update person
+set buergerorte = 'Mendrisio'
+where (nachname, vorname) = ('Rossi', 'Michele');
+
+update person
+set buergerorte = 'Genève'
+where (nachname, vorname) = ('Kanaan', 'Sami');
+
+update person
+set buergerorte = 'Niederlenz'
+where (nachname, vorname) = ('Cirigliano', 'Luca');
+
+update person
+set buergerorte = 'Oensingen;Oberbuchsiten'
+where (nachname, vorname) = ('Nünlist', 'Stefan');
+
+update person
+set buergerorte = 'Schlatt (ZH)'
+where (nachname, vorname) = ('Sommer', 'Monika');
+
+update person
+set buergerorte = 'Plan-les-Ouates;Vernier'
+where (nachname, vorname) = ('Seydoux', 'Laurent');
