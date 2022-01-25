@@ -84,7 +84,7 @@ def process_publication_by_key(publ, matcher, format):
     return ms
 
 
-def create_parliamentarian_matcher(mycursor, ref_date):
+def create_name_matcher(mycursor, ref_date):
     mycursor.execute('''
         select distinct id, vorname, zweiter_vorname, vorname_kurz, nachname, buergerorte
         from parlamentarier pa
@@ -106,10 +106,7 @@ def create_parliamentarian_matcher(mycursor, ref_date):
             n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
                                  row[4], tuple(row[5].split(';')) if row[5] else None)
         names.append(n)
-    return namematcher.NameMatcher(names=names)
 
-
-def create_lobbyist_matcher(mycursor, ref_date):
     mycursor.execute('''
         select distinct p.id, vorname, zweiter_vorname, vorname_kurz, nachname, buergerorte
         from person p
@@ -118,7 +115,6 @@ def create_lobbyist_matcher(mycursor, ref_date):
           and coalesce(buergerorte, '') != 'Unbekannt'
         order by 1, 3
     ''', {'date': ref_date})
-    names = []
     for row in mycursor.fetchall():
         if row[0] == 301:
             n = namematcher.Name((PersonType.LOBBYIST, row[0]), '(?:Christian|Karoly)', None, None, 'K(?:o|ö)pe',
@@ -331,8 +327,7 @@ if __name__ == "__main__":
         data = list(data)
 
     ref_date = args.from_date if args.from_date else data[0]['sogcPublication']['registryOfCommerceJournalDate'] if args.publ else args.ref_date
-    parliamentarians = create_parliamentarian_matcher(cursor, ref_date)
-    lobbyists = create_lobbyist_matcher(cursor, ref_date)
+    matcher = create_name_matcher(cursor, ref_date)
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
@@ -375,12 +370,10 @@ if __name__ == "__main__":
         for format in formats:
             if found:
                 break
-            for matcher in [parliamentarians, lobbyists]:
-                matches = process_publication_by_key(publ, matcher, format)
-                for m in matches:
-                    for proc in processors:
-                        proc.process(publ, m)
-                    found = True
+            for m in process_publication_by_key(publ, matcher, format):
+                for proc in processors:
+                    proc.process(publ, m)
+                found = True
 
     for proc in processors:
         proc.finalize()
