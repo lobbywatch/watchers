@@ -114,7 +114,7 @@ class NameMatcher:
 
     @staticmethod
     def __last_name_pattern(n):
-        if n.startswith('de ') or n.startswith('von '):
+        if n.startswith('de ') or n.startswith('van ') or n.startswith('De ') or n.startswith('von '):
             return n
         return second_lastname_re.sub('(?:[- ]\1)?', n)
 
