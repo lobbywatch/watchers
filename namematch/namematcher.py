@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-import re
+import regex as re
 
 
 # AnyStr = str | bytes
@@ -104,12 +104,13 @@ class NameMatcher:
 
     def match_content_component(self, component, regex, idx, label, offset, res):
         for m in regex.finditer(component):
+            # for i, g in enumerate(m.groups()):
+                # if g:
+                #     res.append(NameMatch(self._names_idx[i], label, component, offset + idx, m.start(i + 1), m.end(i + 1)))
             for i in m.groupdict().items():
                 if i[1]:
                     name = self._names_idx[int(i[0][1:])]
-                    start = m.start(i[0])
-                    end = m.end(i[0])
-                    res.append(NameMatch(name, label, component, offset + idx, start, end))
+                    res.append(NameMatch(name, label, component, offset + idx, m.start(i[0]), m.end(i[0])))
 
     @staticmethod
     def __last_name_pattern(n):
