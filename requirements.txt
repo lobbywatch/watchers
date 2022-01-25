@@ -5,3 +5,4 @@ slack_bolt
 requests~=2.26.0
 urlwatch~=2.24
 html2text~=2020.1.16
+regex
