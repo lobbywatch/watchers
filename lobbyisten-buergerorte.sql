@@ -693,3 +693,39 @@ where (nachname, vorname) = ('Sommer', 'Monika');
 update person
 set buergerorte = 'Plan-les-Ouates;Vernier'
 where (nachname, vorname) = ('Seydoux', 'Laurent');
+
+update person
+set buergerorte = 'Volketswil'
+where (nachname, vorname) = ('Fischer', 'Benjamin');
+
+update person
+set buergerorte = 'Biasca'
+where (nachname, vorname) = ('Strozzi', 'Elena');
+
+update person
+set buergerorte = 'Thundorf'
+where (nachname, vorname) = ('Wellauer', 'Urs');
+
+update person
+set buergerorte = 'Zürich'
+where (nachname, vorname) = ('Keller', 'Ulrich');
+
+update person
+set buergerorte = 'Unbekannt'
+where (nachname, vorname) = ('Berger', 'Thomas');
+
+update person
+set buergerorte = 'Steg;Niedergesteln;Turtmann'
+where (nachname, vorname) = ('Graber', 'Michael');
+
+update person
+set buergerorte = 'Wald (AR)'
+where (nachname, vorname) = ('Schläpfer', 'Bruno');
+
+update person
+set buergerorte = 'Zürich'
+where (nachname, vorname) = ('Läubli', 'Hans');
+
+update person
+set buergerorte = 'Zollikon;Kirchberg (SG)'
+where (nachname, vorname) = ('Keller', 'Hans-Peter');

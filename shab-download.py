@@ -68,6 +68,8 @@ def process_publication_by_key(publ, matcher, format):
     message_bytes = memoryview(ft_type_re.sub('\\1', message).encode('utf-8'))
     ms = []
     matches = content_key_split_re.finditer(message_bytes)
+    start = 0
+    key = b'Unzugeordnet'
     try:
         match = next(matches)
         key = match.group(1)
@@ -79,7 +81,7 @@ def process_publication_by_key(publ, matcher, format):
             start = match.end()
         ms += matcher.match_content(message_bytes[start:], key, start, format)
     except StopIteration:
-        ms += matcher.match_content(message_bytes, b'Unzugeordnet', 0, format)
+        ms += matcher.match_content(message_bytes[start:], key, 0, format)
     return ms
 
 
@@ -91,7 +93,7 @@ def create_parliamentarian_matcher(mycursor, ref_date):
             select null
             from in_rat
             where parlamentarier_id = pa.id
-            and %(date)s <= coalesce(bis, now())
+            and coalesce(bis, now()) >= now()
         )
         order by 1, 3
     ''', {'date': ref_date})
@@ -110,11 +112,13 @@ def create_parliamentarian_matcher(mycursor, ref_date):
 
 def create_lobbyist_matcher(mycursor, ref_date):
     mycursor.execute('''
-        select distinct p.id, vorname, zweiter_vorname, vorname_kurz, nachname, buergerorte
+        select distinct p.id, p.vorname, p.zweiter_vorname, p.vorname_kurz, p.nachname, p.uergerorte
         from person p
-                 join zutrittsberechtigung z on p.id = z.person_id
-        where %(date)s <= coalesce(z.bis, now())
-          and coalesce(buergerorte, '') != 'Unbekannt'
+         join zutrittsberechtigung z on p.id = z.person_id
+         join parlamentarier pa on z.parlamentarier_id = pa.id
+        where coalesce(z.bis, now()) >= now()
+          and coalesce(pa.im_rat_bis, now()) >= now()
+          and coalesce(p.buergerorte, '') != 'Unbekannt'
         order by 1, 3
     ''', {'date': ref_date})
     names = []
