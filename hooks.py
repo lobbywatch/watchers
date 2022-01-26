@@ -1,10 +1,6 @@
 from datetime import datetime
-import re
-import requests
-import os
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 
+from slack_sdk import WebClient
 from urlwatch import reporters
 
 
@@ -24,5 +20,5 @@ class CustomSlackReporter(reporters.TextReporter):
                 filetype="diff",
                 content=text,
                 initial_comment="Report " + timestamp,
-                title="report.txt"
+                title=f"report-{datetime.now().strftime('%d.%m.%Y')}.txt"
             )
