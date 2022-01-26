@@ -112,7 +112,7 @@ def create_parliamentarian_matcher(mycursor, ref_date):
 
 def create_lobbyist_matcher(mycursor, ref_date):
     mycursor.execute('''
-        select distinct p.id, p.vorname, p.zweiter_vorname, p.vorname_kurz, p.nachname, p.uergerorte
+        select distinct p.id, p.vorname, p.zweiter_vorname, p.vorname_kurz, p.nachname, p.buergerorte
         from person p
          join zutrittsberechtigung z on p.id = z.person_id
          join parlamentarier pa on z.parlamentarier_id = pa.id
