@@ -244,9 +244,9 @@ class DatabaseProcessor(MatchProcessor):
     def finalize(self):
         self.cursor.execute('''
             update shab_match_job
-            set finished_at = %(finished_at)s
+            set finished_at = now()
             where id = %(id)s
-        ''', {'id': self.job_id, 'finished_at': datetime.now()})
+        ''', {'id': self.job_id})
 
 
 class SlackProcessor(MatchProcessor):
@@ -364,6 +364,10 @@ if __name__ == "__main__":
     for publ in data:
         ehraid = publ['companyShort']['ehraid']
         uid = publ['companyShort']['uid']
+        if not uid:
+            print(f'error: skipping publication {publ_id} without uid')
+            continue
+
         uid = uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12]
         publ_id = publ['sogcPublication']['sogcId']
         canton = publ['sogcPublication']['registryOfCommerceCanton']
