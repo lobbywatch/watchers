@@ -21,5 +21,6 @@ create table shab_name_match
     person_id         int references person (id),
     label             varchar(255) not null,
     offset            int          not null,
-    extract           mediumtext   not null
+    extract           mediumtext   not null,
+    mutations         json         not null
 );
