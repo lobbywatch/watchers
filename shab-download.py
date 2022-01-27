@@ -20,6 +20,8 @@ config = {**dotenv_values(".env"), **os.environ}
 
 req_headers = {'Accept': 'application/json'}
 
+registries = {}
+
 colon_re = re.compile('(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
 semicolon_re = re.compile('(?!\\B\\[[^]]*);(?![^\\[]*]\\B)')
 ft_type_re = re.compile('<FT TYPE=".">([^<]+)</FT>')
@@ -103,6 +105,10 @@ def create_parliamentarian_matcher(mycursor, ref_date):
             n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), 'Nicole Melanie',
                                  tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
                                  tuple(row[5].split(';')) if row[5] else None)
+        elif row[0] == 383:
+            n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), row[1],
+                                 tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
+                                 tuple((row[5] + ';Randogne').split(';')))
         else:
             n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
                                  row[4], tuple(row[5].split(';')) if row[5] else None)
@@ -225,15 +231,18 @@ class DatabaseProcessor(MatchProcessor):
         self.job_id = cursor.lastrowid
 
     def process_publ(self, publ, match):
+        ehraid = publ['companyShort']['ehraid']
         uid = publ['companyShort']['uid']
         uid = uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12]
         journal_date = publ['sogcPublication']['registryOfCommerceJournalDate']
         publ_id = publ['sogcPublication']['sogcId']
+        reg_company_url = get_registry_company_url(publ)
         zefix_publ_url = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publ_id}'
         self.cursor.execute('''
-            insert into shab_name_match(job_id, company_name, uid, publ_id, publ_url, canton, journal_date, publ_date, parlamentarier_id, person_id, label, offset, extract, mutations)
-            values (%(job_id)s, %(company_name)s, %(uid)s, %(publ_id)s, %(publ_url)s, %(canton)s, %(journal_date)s, %(publ_date)s, %(parlamentarier_id)s, %(person_id)s, %(label)s, %(offset)s, %(extract)s, %(mutations)s)
+            insert into shab_name_match(job_id, company_name, uid, reg_company_url, publ_id, publ_url, canton, journal_date, publ_date, parlamentarier_id, person_id, label, offset, extract, mutations)
+            values (%(job_id)s, %(company_name)s, %(uid)s, %(reg_company_url)s, %(publ_id)s, %(publ_url)s, %(canton)s, %(journal_date)s, %(publ_date)s, %(parlamentarier_id)s, %(person_id)s, %(label)s, %(offset)s, %(extract)s, %(mutations)s)
         ''', {'job_id': self.job_id, 'company_name': publ['companyShort']['name'], 'uid': uid,
+              'reg_company_url': reg_company_url,
               'publ_id': publ_id, 'publ_url': zefix_publ_url,
               'canton': publ['sogcPublication']['registryOfCommerceCanton'],
               'journal_date': journal_date,
@@ -260,9 +269,7 @@ class SlackProcessor(MatchProcessor):
         company_name = publ['companyShort']['name']
         publ_id = publ['sogcPublication']['sogcId']
         ehraid = publ['companyShort']['ehraid']
-        uid = publ['companyShort']['uid']
-        uid = uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12]
-        reg_company_url = registries[registry].replace("#", uid)
+        reg_company_url = get_registry_company_url(publ)
         canton = publ['sogcPublication']['registryOfCommerceCanton']
         journal_date = date.fromisoformat(publ['sogcPublication']['registryOfCommerceJournalDate']).strftime('%d.%m.%Y')
         zefix_publ_url = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publ_id}'
@@ -307,6 +314,12 @@ class SlackProcessor(MatchProcessor):
             print(json.dumps(self.text_blocks, indent=2))
 
 
+def get_registry_company_url(publ):
+    uid = publ['companyShort']['uid']
+    registry = publ['sogcPublication']['registryOfCommerceId']
+    return registries[registry].replace("#", uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12])
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
     if args.from_date and args.from_date > args.to_date:
@@ -339,7 +352,6 @@ if __name__ == "__main__":
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
-    registries = {}
     if resp.status_code == 200:
         for reg in resp.json():
             registries[reg['registryOfCommerceId']] = reg['url2']
@@ -362,20 +374,12 @@ if __name__ == "__main__":
         processors.append(ConsoleProcessor(args))
 
     for publ in data:
-        ehraid = publ['companyShort']['ehraid']
-        uid = publ['companyShort']['uid']
-        if not uid:
+        publ_id = publ['sogcPublication']['sogcId']
+        if not publ['companyShort']['uid']:
             print(f'error: skipping publication {publ_id} without uid')
             continue
 
-        uid = uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12]
-        publ_id = publ['sogcPublication']['sogcId']
         canton = publ['sogcPublication']['registryOfCommerceCanton']
-        registry = publ['sogcPublication']['registryOfCommerceId']
-
-        regCompanyUrl = registries[registry].replace("#", uid)
-        zefixPublUrl = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publ_id}'
-
         formats = ['vd'] if canton in ('VD', 'GE', 'NE') else ['fr', 'vd'] if canton == 'FR' else ['std']
 
         found = False

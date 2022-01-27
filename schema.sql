@@ -12,6 +12,7 @@ create table shab_name_match
     job_id            int          not null references shab_match_job (id),
     company_name      varchar(255) not null,
     uid               varchar(15)  not null,
+    reg_company_url   varchar(255) not null,
     publ_id           int          not null,
     publ_url          varchar(255) not null,
     canton            varchar(2)   not null,
