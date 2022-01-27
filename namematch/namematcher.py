@@ -166,15 +166,15 @@ class NameMatcher:
         if buergerorte:
             # TODO consider supporting negative lookahead like in `(?!Gaga\b|Gugu\b)`
             if len(buergerorte) > 1:
-                result += '[^:;]{0,100}?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) (?:' + \
-                          '|'.join(buergerorte) + ')'
+                result += '[^:;]{0,100}?\\b' + '(?&in) (?:' + '|'.join(buergerorte) + ')'
             else:
-                result += '[^:;]{0,100}?\\b' + '(?:von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d\'|d[ia]) ' + buergerorte[0]
+                result += '[^:;]{0,100}?\\b' + '(?&in) ' + buergerorte[0]
 
         return result + ')'
 
     def __json_to_regex(self, names, format='std'):
-        r = '(?:^|\\s)(?:' + '|'.join(map(lambda n: self.__expand_with_buergerorte(n, format), names)) + ')\\b'
+        defs = '(?(DEFINE)(?P<in>von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d[\'ia]))'
+        r = defs + '(?:^|\\s)(?:' + '|'.join(map(lambda n: self.__expand_with_buergerorte(n, format), names)) + ')\\b'
         r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '(?:a|à)').replace('á', '(?:a|á)') \
             .replace('ç', '(?:c|ç)').replace('é', '(?:e|é)').replace('è', '(?:e|è)').replace('ë', '(?:e|ë)') \
             .replace('ï', '(?:i|ï)').replace('î', '(?:i|î)').replace('ò', '(?:o|ò)').replace('ô', '(?:o|ô)')
