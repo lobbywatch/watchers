@@ -1,8 +1,8 @@
 mysql-connector-python~=8.0.27
 python-dotenv~=0.19.2
-slack_bolt
+slack_bolt~=1.11.2
 
-requests~=2.26.0
+requests~=2.27.1
 urlwatch~=2.24
 html2text~=2020.1.16
 regex
@@ -10,3 +10,5 @@ regex
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+
+webchanges~=3.9
