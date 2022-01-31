@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from slack_sdk import WebClient
-from urlwatch import reporters
+from webchanges import reporters
 
 
 class CustomSlackReporter(reporters.TextReporter):

@@ -25,3 +25,10 @@ create table shab_name_match
     extract           mediumtext   not null,
     mutations         json         not null
 );
+
+create table sheets_query
+(
+    query_set  varchar(100) not null,
+    sheet_name varchar(100) not null,
+    query      mediumtext   not null
+);

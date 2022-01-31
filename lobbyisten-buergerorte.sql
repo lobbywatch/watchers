@@ -167,7 +167,7 @@ set buergerorte = 'Weisslingen;Affoltern am Albis'
 where (nachname, vorname) = ('Furrer', 'Frank');
 
 update person p
-set buergerorte = 'Baldingen;Baden'
+set buergerorte = 'Baldingen;Baden;Zurzach'
 where (nachname, vorname) = ('Binder', 'Andreas');
 
 update person p

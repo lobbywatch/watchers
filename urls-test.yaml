@@ -1,8 +1,11 @@
 ---
-name: digitalswitzerland - Vorstand
-url: https://digitalswitzerland.com/board/
+name: Interessenbindungen - Henrique Schneider
+url: https://www.admin.ch/ch/d/cf/ko/interessenbindung_5471.html
 filter:
-  - css: 'div.person-info'
-  - html2text
-  - shellpipe: bash -c ./replace-all.sh
+  - css:
+      selector: 'article'
+      exclude: 'script'
+  - html2text:
+      method: pyhtml2text
+#  - shellpipe: bash -c ./replace-all.sh
 
