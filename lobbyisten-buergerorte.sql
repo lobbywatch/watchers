@@ -729,3 +729,7 @@ where (nachname, vorname) = ('Läubli', 'Hans');
 update person
 set buergerorte = 'Zollikon;Kirchberg (SG)'
 where (nachname, vorname) = ('Keller', 'Hans-Peter');
+
+update person
+set buergerorte = 'Villmergen;Männedorf'
+where (nachname, vorname) = ('Hegi', 'Roger');
