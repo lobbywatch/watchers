@@ -4,17 +4,18 @@
 import argparse
 import json
 import os
-import regex as re
 import sys
 from datetime import date, datetime, timedelta
-from enum import Enum
 from pathlib import Path
 
 import mysql.connector
+import regex as re
 import requests
 from dotenv import dotenv_values
 
-from namematch import namematcher
+import namematch.lobbywatch
+from namematch.lobbywatch import PersonType
+from namematch.namematcher import MatchFormat
 
 config = {**dotenv_values(".env"), **os.environ}
 
@@ -34,14 +35,6 @@ parser.add_argument('--to', dest='to_date', default=date.today().isoformat(), ty
 parser.add_argument('--publ', dest='publ')
 parser.add_argument('--json', dest='json_channel')
 parser.add_argument('--database', action=argparse.BooleanOptionalAction)
-
-
-class PersonType(Enum):
-    PARLIAMENTARIAN = '🙋️'
-    LOBBYIST = '👻'
-
-    def __init__(self, emoji):
-        self.emoji = emoji
 
 
 def unescape_entities(text):
@@ -85,58 +78,6 @@ def process_publication_by_key(publ, matcher, format):
     except StopIteration:
         ms += matcher.match_content(message_bytes[start:], key, 0, format)
     return ms
-
-
-def create_parliamentarian_matcher(mycursor, ref_date):
-    mycursor.execute('''
-        select distinct id, vorname, zweiter_vorname, vorname_kurz, nachname, buergerorte
-        from parlamentarier pa
-        where exists (
-            select null
-            from in_rat
-            where parlamentarier_id = pa.id
-            and coalesce(bis, now()) >= now()
-        )
-        order by 1, 3
-    ''', {'date': ref_date})
-    names = []
-    for row in mycursor.fetchall():
-        if row[0] == 357:
-            n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), 'Nicole Melanie',
-                                 tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
-                                 tuple(row[5].split(';')) if row[5] else None)
-        elif row[0] == 383:
-            n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), row[1],
-                                 tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
-                                 tuple((row[5] + ';Randogne').split(';')))
-        else:
-            n = namematcher.Name((PersonType.PARLIAMENTARIAN, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
-                                 row[4], tuple(row[5].split(';')) if row[5] else None)
-        names.append(n)
-    return namematcher.NameMatcher(names=names)
-
-
-def create_lobbyist_matcher(mycursor, ref_date):
-    mycursor.execute('''
-        select distinct p.id, p.vorname, p.zweiter_vorname, p.vorname_kurz, p.nachname, p.buergerorte
-        from person p
-         join zutrittsberechtigung z on p.id = z.person_id
-         join parlamentarier pa on z.parlamentarier_id = pa.id
-        where coalesce(z.bis, now()) >= now()
-          and coalesce(pa.im_rat_bis, now()) >= now()
-          and coalesce(p.buergerorte, '') != 'Unbekannt'
-        order by 1, 3
-    ''', {'date': ref_date})
-    names = []
-    for row in mycursor.fetchall():
-        if row[0] == 301:
-            n = namematcher.Name((PersonType.LOBBYIST, row[0]), '(?:Christian|Karoly)', None, None, 'K(?:o|ö)pe',
-                                 tuple(row[5].split(';')) if row[5] else None)
-        else:
-            n = namematcher.Name((PersonType.LOBBYIST, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
-                                 row[4], tuple(row[5].split(';')) if row[5] else None)
-        names.append(n)
-    return namematcher.NameMatcher(names=names)
 
 
 def load_publications(ref_date, cache_dir):
@@ -347,8 +288,7 @@ if __name__ == "__main__":
         data = list(data)
 
     ref_date = args.from_date if args.from_date else data[0]['sogcPublication']['registryOfCommerceJournalDate'] if args.publ else args.ref_date
-    parliamentarians = create_parliamentarian_matcher(cursor, ref_date)
-    lobbyists = create_lobbyist_matcher(cursor, ref_date)
+    matchers = namematch.lobbywatch.create_matchers_from_database(cursor, ref_date)
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
@@ -380,13 +320,15 @@ if __name__ == "__main__":
             continue
 
         canton = publ['sogcPublication']['registryOfCommerceCanton']
-        formats = ['vd'] if canton in ('VD', 'GE', 'NE') else ['fr', 'vd'] if canton == 'FR' else ['std']
+        formats = [MatchFormat.SHAB_VD] if canton in ('VD', 'GE', 'NE') \
+            else [MatchFormat.SHAB_FR, MatchFormat.SHAB_VD] if canton == 'FR' \
+            else [MatchFormat.SHAB_STD]
 
         found = False
         for format in formats:
             if found:
                 break
-            for matcher in [parliamentarians, lobbyists]:
+            for matcher in matchers:
                 matches = process_publication_by_key(publ, matcher, format)
                 for m in matches:
                     for proc in processors:
