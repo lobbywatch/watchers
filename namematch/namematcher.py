@@ -13,7 +13,7 @@ class MatchFormat(Enum):
     SHAB_STD = 1
     SHAB_VD = 2
     SHAB_FR = 3
-    FIRST_LAST_ONLY = 4
+    NAME_ONLY = 4
 
 
 @dataclass(frozen=True)
@@ -39,7 +39,7 @@ class NameMatch:
         return f'{str(self.message[0:self.start], "utf-8")}{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}{str(self.message[self.end:], "utf-8")}'.strip()
 
     def content(self, emoji):
-        return f'{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}'
+        return str(self.message[self.start:self.end], "utf-8") if emoji == '' else f'{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}'
 
 
 colon_re = re.compile(b'(?!\\B\\[[^]]*):(?![^\\[]*]\\B)')
@@ -56,7 +56,7 @@ class NameMatcher:
         self._regex = {MatchFormat.SHAB_STD: self.__json_to_regex(names, format=MatchFormat.SHAB_STD),
                        MatchFormat.SHAB_VD:  self.__json_to_regex(names, format=MatchFormat.SHAB_VD),
                        MatchFormat.SHAB_FR:  self.__json_to_regex(names, format=MatchFormat.SHAB_FR),
-                       MatchFormat.FIRST_LAST_ONLY:  self.__json_to_regex(names, format=MatchFormat.FIRST_LAST_ONLY),
+                       MatchFormat.NAME_ONLY:  self.__json_to_regex(names, format=MatchFormat.NAME_ONLY),
                        }
 
     def match(self, message, format):
@@ -181,12 +181,12 @@ class NameMatcher:
             result += '(?:' + lastname + ' (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]|$))'
         elif format == MatchFormat.SHAB_FR:
             result += '(?:' + firstname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
-        elif format == MatchFormat.FIRST_LAST_ONLY:
-            result += '(?:' + firstname + '[ |]*' + lastname + ')'
+        elif format == MatchFormat.NAME_ONLY:
+            result += '(?:' + firstname + '(?: |\xc2\xa0)+' + lastname + '|' + lastname + ',?(?: |\xc2\xa0)+' + firstname + ')'
         else:
             raise Exception(f'Unknown format: {format}')
 
-        if buergerorte and format != MatchFormat.FIRST_LAST_ONLY:
+        if buergerorte and format != MatchFormat.NAME_ONLY:
             # TODO consider supporting negative lookahead like in `(?!Gaga\b|Gugu\b)`
             if len(buergerorte) > 1:
                 result += '[^:;]{0,100}?\\b' + '(?&in) (?:' + '|'.join(buergerorte) + ')'
@@ -196,7 +196,7 @@ class NameMatcher:
         return result + ')'
 
     def __json_to_regex(self, names, format):
-        if format == MatchFormat.FIRST_LAST_ONLY:
+        if format == MatchFormat.NAME_ONLY:
             r = '|'.join(map(lambda n: self.__expand_with_buergerorte(n, format), names))
         else:
             defs = '(?(DEFINE)(?P<in>von(?: und in)?|de(?: et à)?|du(?: et au)?|des(?: et aux)?|d[\'ia]))'
