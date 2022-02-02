@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
-import html
 import os
 import sys
 from datetime import date
+from io import BytesIO
 from urllib.parse import urlparse
 
 import mysql.connector
@@ -16,7 +16,6 @@ import scrapy.crawler
 from bs4 import BeautifulSoup as Soup
 from dotenv import dotenv_values
 from lxml import etree
-from io import BytesIO, StringIO
 from lxml.cssselect import CSSSelector
 
 import namematch.lobbywatch
@@ -185,28 +184,25 @@ class LobbySpider(scrapy.Spider):
         self.follow_links = kwargs.get('follow_links')
 
     def parse(self, response, **kwargs):
-        if response.url.endswith('pdf'):
+        content_type = response.headers.get('Content-Type')
+        if content_type and not content_type.startswith(b'text/html'):
             return
 
-        print(response.url)
         try:
             tree = etree.parse(BytesIO(response.body), parser=etree.HTMLParser())
             for e in self.exclude_selector(tree):
                 e.getparent().remove(e)
-            text = etree.tostring(tree, encoding='UTF-8')
+            bytes = etree.tostring(tree, encoding='UTF-8')
         except (ValueError, AttributeError):
             return
 
-        text = self.tags_re.sub('', text)
-        # text = html.unescape(text)
-        # text = '\n'.join((line.rstrip() for line in text.splitlines() if line.strip() != ''))
-
-        matches = []
+        bytes = self.tags_re.sub('', bytes)
         for matcher in self.matchers:
-            for m in matcher.match_text(text, MatchFormat.FIRST_LAST_ONLY):
-                matches.append(m.content(m.name.id[0].emoji))
-        if matches:
-            yield {'url': response.url, 'matches': matches}
+            for m in matcher.match_text(bytes, MatchFormat.NAME_ONLY):
+                if m.name.id[0] == namematch.lobbywatch.PersonType.LOBBYIST:
+                    yield {'url': response.url, 'person_id': m.name.id[1], 'offset': m.start, 'extract': m.content('')}
+                else:
+                    yield {'url': response.url, 'parlamentarier_id': m.name.id[1], 'offset': m.start, 'extract': m.content('')}
 
         if self.follow_links:
             for e in self.href_selector(tree):
@@ -219,6 +215,8 @@ class LobbySpider(scrapy.Spider):
                 if url.scheme in ('http', 'https') and url.hostname is not None and url.hostname.endswith('.ch'):
                     yield scrapy.Request(response.urljoin(href), callback=self.parse)
 
+        # hash = hashlib.sha1(response.body).hexdigest()
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -230,7 +228,8 @@ if __name__ == "__main__":
         site = "https://" + site
     top25 = [site]
 
-    sitemap_url = locate_sitemap(urlparse(site))
+    sitemap_url = None
+    # sitemap_url = locate_sitemap(urlparse(site))
     if sitemap_url is not None:
         resp = requests.get(sitemap_url.geturl(), headers=req_headers, allow_redirects=True)
         if resp.status_code != 200:
