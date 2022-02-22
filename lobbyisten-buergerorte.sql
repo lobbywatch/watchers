@@ -733,3 +733,19 @@ where (nachname, vorname) = ('Keller', 'Hans-Peter');
 update person
 set buergerorte = 'Villmergen;Männedorf'
 where (nachname, vorname) = ('Hegi', 'Roger');
+
+update person
+set buergerorte = 'Galgenen'
+where (nachname, vorname) = ('Mäder', 'Philippe');
+
+update person
+set buergerorte = 'Hildisrieden'
+where (nachname, vorname) = ('Bachmann-Roth', 'Christina');
+
+update person
+set buergerorte = 'Unbekannt'
+where (nachname, vorname) = ('Fischer', 'Julia');
+
+update person
+set buergerorte = 'Zürich'
+where (nachname, vorname) = ('Missbach', 'Andreas');
