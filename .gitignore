@@ -6,4 +6,4 @@ __pycache__/
 /.idea
 .env
 
-./urls-test.yaml
+/urls-test.yaml
