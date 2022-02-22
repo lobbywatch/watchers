@@ -16,9 +16,8 @@ config = dotenv_values(".env")
 app = App(token=config["SLACK_BOT_TOKEN"])
 logging.basicConfig(level=logging.DEBUG)
 
-@app.command("/hr")
+@app.command("/add-website")
 def handle_some_command(ack, body, respond, command, logger):
-    print(body)
     ack()
     logger.info(body)
     if command.get("text"):
@@ -27,8 +26,15 @@ def handle_some_command(ack, body, respond, command, logger):
             url = urlparse(text[1:-1])
             if url.scheme.startswith("http") and url.netloc:
                 process = subprocess.run(['./add-url.sh', url.geturl()], stdout=subprocess.PIPE, universal_newlines=True)
-                respond(process.stdout)
-
+                result = process.stdout
+                if process.returncode == 0:
+                    if not result.startswith("URL already added:"):
+                        subprocess.run('bash', '-c', f'git add urls.yaml')
+                        subprocess.run('bash', '-c', f'git commit -m "adding {url.geturl()}"')
+                        subprocess.run('bash', '-c', f'git push')
+                    respond(result)
+            else:
+                respond(f"Invalid URL: {url.geturl()}")
 
 @app.event("app_mention")
 def handle_mention(body, say, logger):
