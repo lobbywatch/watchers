@@ -29,9 +29,9 @@ def handle_some_command(ack, body, respond, command, logger):
                 result = process.stdout
                 if process.returncode == 0:
                     if not result.startswith("URL already added:"):
-                        subprocess.run('bash', '-c', f'git add urls.yaml')
-                        subprocess.run('bash', '-c', f'git commit -m "adding {url.geturl()}"')
-                        subprocess.run('bash', '-c', f'git push')
+                        subprocess.run(['bash', '-c', f'git add urls.yaml'])
+                        subprocess.run(['bash', '-c', f'git commit -m "adding {url.geturl()}"'])
+                        subprocess.run(['bash', '-c', f'git push'])
                     respond(result)
             else:
                 respond(f"Invalid URL: {url.geturl()}")
