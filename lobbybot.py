@@ -26,7 +26,7 @@ def handle_some_command(ack, body, respond, command, logger):
         if text.startswith("<") and text.endswith(">"):
             url = urlparse(text[1:-1])
             if url.scheme.startswith("http") and url.netloc:
-                process = subprocess.run(['./add-url.sh', command["text"]], stdout=subprocess.PIPE, universal_newlines=True)
+                process = subprocess.run(['./add-url.sh', url.geturl()], stdout=subprocess.PIPE, universal_newlines=True)
                 respond(process.stdout)
 
 
