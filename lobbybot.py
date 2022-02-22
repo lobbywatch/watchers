@@ -17,32 +17,40 @@ app = App(token=config["SLACK_BOT_TOKEN"])
 logging.basicConfig(level=logging.DEBUG)
 
 @app.command("/add-website")
-def handle_some_command(ack, body, respond, command, logger):
+def add_website(ack, body, respond, command, logger):
     ack()
     logger.info(body)
     if command.get("text"):
-        text = command["text"]
-        if text.startswith("<") and text.endswith(">"):
-            url = urlparse(text[1:-1])
-            if url.scheme.startswith("http") and url.netloc:
-                process = subprocess.run(['./add-url.sh', url.geturl()], stdout=subprocess.PIPE, universal_newlines=True)
-                result = process.stdout
-                if process.returncode == 0:
-                    if not result.startswith("URL already added:"):
-                        subprocess.run(['bash', '-c', f'git add urls.yaml'])
-                        subprocess.run(['bash', '-c', f'git commit -m "adding {url.geturl()}"'])
-                        subprocess.run(['bash', '-c', f'git push'])
-                    respond(result)
-            else:
-                respond(f"Invalid URL: {url.geturl()}")
+        respond(add_website(command["text"]))
+
+
+def add_website(text):
+    url = None
+    if text.startswith("<") and text.endswith(">"):
+        url = urlparse(text[1:-1])
+    if not url or not url.scheme.startswith("http") or not url.netloc:
+        return f"Invalid URL: {text}"
+
+    process = subprocess.run(['./add-url.sh', url.geturl()], stdout=subprocess.PIPE, universal_newlines=True)
+    result = process.stdout
+    if process.returncode == 0:
+        if not result.startswith("URL already added:"):
+            subprocess.run(['bash', '-c', f'git add urls.yaml'])
+            subprocess.run(['bash', '-c', f'git commit -m "adding {url.geturl()}"'])
+            subprocess.run(['bash', '-c', f'git push'])
+    return result
+
 
 @app.event("app_mention")
 def handle_mention(body, say, logger):
-    user = body["event"]["user"]
-    # single logger call
-    # global logger is passed to listener
     logger.debug(body)
-    say(f"{user} mentioned your app", thread_ts=body["event"]["event_ts"])
+    if body.get('text') and body.text.find('add-website') > 0:
+        url = body.text[body.text.find('add-website') + len('add-website'):]
+        if url.find(' ') > 0:
+            url = url[:url.find(' ')]
+        say(add_website(url), thread_ts=body["event"]["event_ts"])
+    else:
+        say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"], response_type="ephemeral")
 
 
 @app.event("message")
