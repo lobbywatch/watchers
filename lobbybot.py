@@ -22,17 +22,18 @@ def add_website(ack, body, respond, command, logger):
     ack()
     logger.info(body)
     if command.get("text"):
-        respond(add_website(command["text"]))
+        respond(add_website(command["text"], logger))
 
 
-def add_website(text):
+def add_website(text, logger):
     url = None
     if text.startswith("<") and text.endswith(">"):
         url = urlparse(text[1:-1])
     if not url or not url.scheme.startswith("http") or not url.netloc:
         return f"Invalid URL: {text}"
 
-    process = subprocess.run(['./add-url.sh', url.geturl()], stdout=subprocess.PIPE, universal_newlines=True)
+    logger.debug(f'adding website: {url.geturl()}')
+    process = subprocess.run(['bash', '-c', f'./add-url.sh {url.geturl()}'], stdout=subprocess.PIPE, universal_newlines=True)
     result = process.stdout
     if process.returncode == 0:
         if not result.startswith("URL already added:"):
@@ -45,12 +46,12 @@ def add_website(text):
 @app.event("app_mention")
 def handle_mention(body, say, logger):
     logger.debug(body)
-    if body.get('text') and body.text.find('add-website') > 0:
-        text = normalize("NFKD", body.text)
-        url = text[text.find('add-website') + len('add-website'):]
+    if body['event']['text'].find('add-website') > 0:
+        text = normalize("NFKD", body['event']['text'])
+        url = text[text.find('add-website') + len('add-website'):].strip()
         if url.find(' ') > 0:
             url = url[:url.find(' ')]
-        say(add_website(url), thread_ts=body["event"]["event_ts"])
+        say(add_website(url, logger), thread_ts=body["event"]["event_ts"])
     else:
         say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"], ephemeral_user=True)
 
