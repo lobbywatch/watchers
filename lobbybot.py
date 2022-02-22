@@ -3,6 +3,7 @@
 
 import logging
 import re
+import subprocess
 from datetime import date
 
 from dotenv import dotenv_values
@@ -19,6 +20,8 @@ def handle_some_command(ack, body, respond, command, logger):
     print(body)
     ack()
     logger.info(body)
+    process = subprocess.run(['./add-url.sh', command["text"]], stdout=subprocess.PIPE, universal_newlines=True)
+    logger.info(process.stdout)
     respond(f'hi {command["text"]}')
 
 
