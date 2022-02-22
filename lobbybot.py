@@ -5,6 +5,7 @@ import logging
 import re
 import subprocess
 from datetime import date
+from urllib.parse import urlparse
 
 from dotenv import dotenv_values
 from slack_bolt import App
@@ -20,9 +21,13 @@ def handle_some_command(ack, body, respond, command, logger):
     print(body)
     ack()
     logger.info(body)
-    process = subprocess.run(['./add-url.sh', command["text"]], stdout=subprocess.PIPE, universal_newlines=True)
-    logger.info(process.stdout)
-    respond(f'hi {command["text"]}')
+    if command.get("text"):
+        text = command["text"]
+        if text.startswith("<") and text.endswith(">"):
+            url = urlparse(text[1:-1])
+            if url.scheme.startswith("http") and url.netloc:
+                process = subprocess.run(['./add-url.sh', command["text"]], stdout=subprocess.PIPE, universal_newlines=True)
+                respond(process.stdout)
 
 
 @app.event("app_mention")
