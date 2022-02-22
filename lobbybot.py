@@ -52,7 +52,7 @@ def handle_mention(body, say, logger):
             url = url[:url.find(' ')]
         say(add_website(url), thread_ts=body["event"]["event_ts"])
     else:
-        say('Sorry, I only respond to messages containing the text "add-website <url>"', response_type="ephemeral")
+        say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"], ephemeral_user=True)
 
 
 @app.event("message")
