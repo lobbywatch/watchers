@@ -7,6 +7,7 @@ import subprocess
 from datetime import date
 from urllib.parse import urlparse
 
+from unicodedata import normalize
 from dotenv import dotenv_values
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
@@ -45,12 +46,13 @@ def add_website(text):
 def handle_mention(body, say, logger):
     logger.debug(body)
     if body.get('text') and body.text.find('add-website') > 0:
-        url = body.text[body.text.find('add-website') + len('add-website'):]
+        text = normalize("NFKD", body.text)
+        url = text[text.find('add-website') + len('add-website'):]
         if url.find(' ') > 0:
             url = url[:url.find(' ')]
         say(add_website(url), thread_ts=body["event"]["event_ts"])
     else:
-        say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"], response_type="ephemeral")
+        say('Sorry, I only respond to messages containing the text "add-website <url>"', response_type="ephemeral")
 
 
 @app.event("message")
