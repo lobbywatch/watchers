@@ -13,8 +13,7 @@ import regex as re
 import requests
 from dotenv import dotenv_values
 
-import namematch.lobbywatch
-from namematch.lobbywatch import PersonType
+from namematch.lobbywatch import PersonType, NameSet, create_matchers_from_database
 from namematch.namematcher import MatchFormat, NameMatcher, Name
 
 config = {**dotenv_values(".env"), **os.environ}
@@ -303,7 +302,7 @@ if __name__ == "__main__":
                                                                   citizenships=o.get('citizenships'))) for jline in json_file]
         matchers = [NameMatcher(names=names)]
     else:
-        matchers = namematch.lobbywatch.create_matchers_from_database(cursor, ref_date)
+        matchers = create_matchers_from_database(cursor, ref_date, NameSet.CURRENT if args.names == 'current' else NameSet.RESEARCH)
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
