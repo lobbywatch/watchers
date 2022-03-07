@@ -182,8 +182,8 @@ class DatabaseProcessor(MatchProcessor):
         reg_company_url = get_registry_company_url(publ)
         zefix_publ_url = f'https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publ_id}'
         self.cursor.execute('''
-            insert into shab_name_match(job_id, company_name, uid, reg_company_url, publ_id, publ_url, canton, journal_date, publ_date, parlamentarier_id, person_id, label, offset, extract, mutations)
-            values (%(job_id)s, %(company_name)s, %(uid)s, %(reg_company_url)s, %(publ_id)s, %(publ_url)s, %(canton)s, %(journal_date)s, %(publ_date)s, %(parlamentarier_id)s, %(person_id)s, %(label)s, %(offset)s, %(extract)s, %(mutations)s)
+            insert into shab_name_match(job_id, company_name, uid, reg_company_url, publ_id, publ_url, canton, journal_date, publ_date, parlamentarier_id, person_id, other_id, label, offset, extract, mutations)
+            values (%(job_id)s, %(company_name)s, %(uid)s, %(reg_company_url)s, %(publ_id)s, %(publ_url)s, %(canton)s, %(journal_date)s, %(publ_date)s, %(parlamentarier_id)s, %(person_id)s, %(other_id)s, %(label)s, %(offset)s, %(extract)s, %(mutations)s)
         ''', {'job_id': self.job_id, 'company_name': publ['companyShort']['name'], 'uid': uid,
               'reg_company_url': reg_company_url,
               'publ_id': publ_id, 'publ_url': zefix_publ_url,
@@ -191,7 +191,8 @@ class DatabaseProcessor(MatchProcessor):
               'journal_date': journal_date,
               'publ_date': publ['sogcPublication']['sogcDate'],
               'parlamentarier_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
-              'person_id': match.name.id[1] if match.name.id[0] == PersonType.LOBBYIST else None,
+              'person_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
+              'other_id': match.name.id[1] if match.name.id[0] == PersonType.OTHER else None,
               'label': str(match.label, 'utf-8'), 'offset': match.message_offset,
               'extract': match.format(match.name.id[0].emoji),
               'mutations': json.dumps([d['key'] for d in publ['sogcPublication']['mutationTypes']])})

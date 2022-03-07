@@ -20,6 +20,7 @@ create table shab_name_match
     publ_date         date         not null,
     parlamentarier_id int references parlamentarier (id),
     person_id         int references person (id),
+    other_id          int,
     label             varchar(255) not null,
     offset            int          not null,
     extract           mediumtext   not null,
