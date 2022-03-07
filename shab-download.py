@@ -190,7 +190,7 @@ class DatabaseProcessor(MatchProcessor):
               'journal_date': journal_date,
               'publ_date': publ['sogcPublication']['sogcDate'],
               'parlamentarier_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
-              'person_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
+              'person_id': match.name.id[1] if match.name.id[0] == PersonType.LOBBYIST else None,
               'other_id': match.name.id[1] if match.name.id[0] == PersonType.OTHER else None,
               'label': str(match.label, 'utf-8'), 'offset': match.message_offset,
               'extract': match.format(match.name.id[0].emoji),
