@@ -5,6 +5,7 @@ from .namematcher import Name, NameMatcher
 class PersonType(Enum):
     PARLIAMENTARIAN = '🙋️'
     LOBBYIST = '👻'
+    OTHER = '👑'
 
     def __init__(self, emoji):
         self.emoji = emoji
