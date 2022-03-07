@@ -15,7 +15,7 @@ from dotenv import dotenv_values
 
 import namematch.lobbywatch
 from namematch.lobbywatch import PersonType
-from namematch.namematcher import MatchFormat
+from namematch.namematcher import MatchFormat, NameMatcher, Name
 
 config = {**dotenv_values(".env"), **os.environ}
 
@@ -34,6 +34,8 @@ parser.add_argument('--from', dest='from_date', type=date.fromisoformat)
 parser.add_argument('--to', dest='to_date', default=date.today().isoformat(), type=date.fromisoformat)
 parser.add_argument('--publ', dest='publ')
 parser.add_argument('--json', dest='json_channel')
+parser.add_argument('--names', dest='names', choices=['current', 'research'], default='current')
+parser.add_argument('--names-file', dest='names_file', type=argparse.FileType('r'))
 parser.add_argument('--database', action=argparse.BooleanOptionalAction)
 
 
@@ -158,7 +160,7 @@ class ConsoleProcessor(MatchProcessor):
         print(f"\t{str(match.label, 'utf-8') if match.label else '???'}:")
 
     def process_publ(self, publ, match):
-        print('\t\t' + match.format(match.name.id[0].emoji))
+        print('\t\t' + match.format(match.name.id[0].emoji if type(match.name.id) is tuple else ''))
 
 
 class DatabaseProcessor(MatchProcessor):
@@ -187,9 +189,12 @@ class DatabaseProcessor(MatchProcessor):
               'publ_id': publ_id, 'publ_url': zefix_publ_url,
               'canton': publ['sogcPublication']['registryOfCommerceCanton'],
               'journal_date': journal_date,
-              'publ_date': publ['sogcPublication']['sogcDate'], 'parlamentarier_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
-              'person_id': match.name.id[1] if match.name.id[0] == PersonType.LOBBYIST else None, 'label': str(match.label, 'utf-8'), 'offset': match.message_offset,
-              'extract': match.format(match.name.id[0].emoji), 'mutations': json.dumps([d['key'] for d in publ['sogcPublication']['mutationTypes']])})
+              'publ_date': publ['sogcPublication']['sogcDate'],
+              'parlamentarier_id': match.name.id[1] if match.name.id[0] == PersonType.PARLIAMENTARIAN else None,
+              'person_id': match.name.id[1] if match.name.id[0] == PersonType.LOBBYIST else None,
+              'label': str(match.label, 'utf-8'), 'offset': match.message_offset,
+              'extract': match.format(match.name.id[0].emoji),
+              'mutations': json.dumps([d['key'] for d in publ['sogcPublication']['mutationTypes']])})
 
     def finalize(self):
         self.cursor.execute('''
@@ -287,8 +292,17 @@ if __name__ == "__main__":
     elif args.publ:
         data = list(data)
 
-    ref_date = args.from_date if args.from_date else data[0]['sogcPublication']['registryOfCommerceJournalDate'] if args.publ else args.ref_date
-    matchers = namematch.lobbywatch.create_matchers_from_database(cursor, ref_date)
+    ref_date = args.from_date if args.from_date else data[0]['sogcPublication'][
+        'registryOfCommerceJournalDate'] if args.publ else args.ref_date
+    if args.names_file:
+        with args.names_file as json_file:
+            names = [json.loads(jline, object_hook=lambda o: Name(id=o['id'], first=o['first'],
+                                                                  middle=tuple(o['middle']) if o.get('middle') else None,
+                                                                  last=o['last'], nick=o.get('nick'),
+                                                                  citizenships=o.get('citizenships'))) for jline in json_file]
+        matchers = [NameMatcher(names=names)]
+    else:
+        matchers = namematch.lobbywatch.create_matchers_from_database(cursor, ref_date)
 
     url = 'https://www.zefix.admin.ch/ZefixPublicREST/api/v1/registryOfCommerce'
     resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
