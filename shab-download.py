@@ -296,7 +296,7 @@ if __name__ == "__main__":
         'registryOfCommerceJournalDate'] if args.publ else args.ref_date
     if args.names_file:
         with args.names_file as json_file:
-            names = [json.loads(jline, object_hook=lambda o: Name(id=o['id'], first=o['first'],
+            names = [json.loads(jline, object_hook=lambda o: Name(id=(PersonType.OTHER, o['id']), first=o['first'],
                                                                   middle=tuple(o['middle']) if o.get('middle') else None,
                                                                   last=o['last'], nick=o.get('nick'),
                                                                   citizenships=o.get('citizenships'))) for jline in json_file]
