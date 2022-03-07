@@ -47,7 +47,7 @@ if __name__ == "__main__":
                    '''))
     cursor.execute('''insert into sheets_query(query_set, sheet_name, query)
         values(%s, %s, %s)''',
-                   ('recherche', 'IB in Recherche', '''
+                   ('recherche', 'Mandate in Recherche', '''
             select  null as cms_link,
                     p.vorname,
                     p.nachname,
