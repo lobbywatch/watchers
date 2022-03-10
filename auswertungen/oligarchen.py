@@ -23,7 +23,8 @@ if __name__ == "__main__":
     cursor.execute('''insert into sheets_query(query_set, sheet_name, query)
         values(%s, %s, %s)''',
                    ('oligarchen', 'HR Einträge', '''
-select  substr(extract, locate('👑', extract)+1, locate('👑', extract, locate('👑', extract)+2)-locate('👑', extract)-1) name,
+select  m.other_id as id,
+        substr(extract, locate('👑', extract)+1, locate('👑', extract, locate('👑', extract)+2)-locate('👑', extract)-1) name,
         m.company_name organisation,
         concat('=hyperlink("', reg_company_url, '";"', m.uid, '")') as uid,
         concat('=hyperlink("', publ_url, '";', publ_id, ')') as publikation,
