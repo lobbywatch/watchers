@@ -31,6 +31,6 @@ select  substr(extract, locate('👑', extract)+1, locate('👑', extract, locat
         label as rubrik,
         extract as auszug
 from shab_name_match m
-where m.job_id = 31
+where m.job_id = 36
 order by publ_id desc
                    '''))
