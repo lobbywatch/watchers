@@ -205,6 +205,8 @@ class NameMatcher:
         r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '(?:a|à)').replace('á', '(?:a|á)') \
             .replace('ç', '(?:c|ç)').replace('é', '(?:e|é)').replace('è', '(?:e|è)').replace('ë', '(?:e|ë)') \
             .replace('ï', '(?:i|ï)').replace('î', '(?:i|î)').replace('ò', '(?:o|ò)').replace('ô', '(?:o|ô)')
+        r = re.sub(r'o[vw]', 'o[vw]', r)
+        r = re.sub(r'(?:ts?)?ch\b', '(?:ts?)?ch', r)
         # if format == MatchFormat.FIRST_LAST_ONLY:
         #     print(r)
         return re.compile(r.encode('utf-8'))
