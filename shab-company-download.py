@@ -42,10 +42,11 @@ def load_company(uid, cache_dir):
         if 200 == resp.status_code:
             uid_file.parent.mkdir(parents=True, exist_ok=True)
             with open(uid_file, 'wb') as f:
-                f.write(json.dumps(
-                    remove_xml_artifacts(
-                        xmltodict.parse(resp.content)['s:Envelope']['s:Body']['GetByUIDResponse']['GetByUIDResult'][
-                            'organisationType']['organisation']), indent=2).encode('utf-8'))
+                if len(resp.content) > 0:
+                    f.write(json.dumps(
+                        remove_xml_artifacts(
+                            xmltodict.parse(resp.content)['s:Envelope']['s:Body']['GetByUIDResponse']['GetByUIDResult'][
+                                'organisationType']['organisation']), indent=2).encode('utf-8'))
             time.sleep(3)
         else:
             print(resp.status_code, resp.text)
