@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import ndjson
 import os
 import sys
 from datetime import date, datetime, timedelta
@@ -82,7 +83,7 @@ def process_publication_by_key(publ, matcher, format):
 
 
 def load_publications(ref_date, cache_dir):
-    zefix_file = cache_dir.joinpath(f'{ref_date.year}/{ref_date}.json')
+    zefix_file = cache_dir.joinpath(f'{ref_date.year}/{ref_date}.ndjson')
     if not zefix_file or not zefix_file.is_file():
         url = f"https://www.zefix.admin.ch/ZefixPublicREST/api/v1/sogc/bydate/{ref_date}"
         resp = requests.get(url, headers=req_headers, auth=(config["ZEFIX_USER"], config["ZEFIX_PASSWORD"]))
@@ -90,10 +91,10 @@ def load_publications(ref_date, cache_dir):
             if len(resp.content) > 0:
                 if zefix_file:
                     zefix_file.parent.mkdir(parents=True, exist_ok=True)
-                    with open(zefix_file, 'xb') as f:
-                        f.write(resp.content)
+                    with open(zefix_file, 'x') as f:
+                        ndjson.dump(json.loads(resp.content), f)
     with open(zefix_file, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        return ndjson.load(f)
 
 
 def data_loader(args, config):
