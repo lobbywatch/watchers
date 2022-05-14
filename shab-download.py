@@ -14,6 +14,7 @@ import regex as re
 import requests
 from dotenv import dotenv_values
 
+import namematch.lobbywatch
 from namematch.lobbywatch import PersonType, NameSet, create_matchers_from_database
 from namematch.namematcher import MatchFormat, NameMatcher, Name
 
@@ -160,7 +161,10 @@ class ConsoleProcessor(MatchProcessor):
         print(f"\t{str(match.label, 'utf-8') if match.label else '???'}:")
 
     def process_publ(self, publ, match):
-        print('\t\t' + match.format(match.name.id[0].emoji if type(match.name.id) is tuple else ''))
+        emoji = match.name.id[0].emoji if type(match.name.id) is tuple else ''
+        if namematch.lobbywatch.is_ambiguous_name(match.name):
+            emoji += '⚠️'
+        print('\t\t' + match.format(emoji))
 
 
 class DatabaseProcessor(MatchProcessor):
@@ -174,6 +178,9 @@ class DatabaseProcessor(MatchProcessor):
         self.job_id = cursor.lastrowid
 
     def process_publ(self, publ, match):
+        emoji = match.name.id[0].emoji if type(match.name.id) is tuple else ''
+        if namematch.lobbywatch.is_ambiguous_name(match.name):
+            emoji += '⚠️'
         ehraid = publ['companyShort']['ehraid']
         uid = publ['companyShort']['uid']
         uid = uid[0:3] + '-' + uid[3:6] + '.' + uid[6:9] + '.' + uid[9:12]
@@ -194,7 +201,7 @@ class DatabaseProcessor(MatchProcessor):
               'person_id': match.name.id[1] if match.name.id[0] == PersonType.LOBBYIST else None,
               'other_id': match.name.id[1] if match.name.id[0] == PersonType.OTHER else None,
               'label': str(match.label, 'utf-8'), 'offset': match.message_offset,
-              'extract': match.format(match.name.id[0].emoji),
+              'extract': match.format(emoji),
               'mutations': json.dumps([d['key'] for d in publ['sogcPublication']['mutationTypes']])})
 
     def finalize(self):
@@ -233,7 +240,10 @@ class SlackProcessor(MatchProcessor):
         self.text_blocks.append(self.current_block)
 
     def process_publ(self, publ, match):
-        desc = match.format(match.name.id[0].emoji)
+        emoji = match.name.id[0].emoji if type(match.name.id) is tuple else ''
+        if namematch.lobbywatch.is_ambiguous_name(match.name):
+            emoji += '⚠️'
+        desc = match.format(emoji)
         self.current_block['accessory']['options'].append({
             'text': {
                 'type': 'plain_text',

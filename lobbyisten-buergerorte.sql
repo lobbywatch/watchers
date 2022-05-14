@@ -749,3 +749,19 @@ where (nachname, vorname) = ('Fischer', 'Julia');
 update person
 set buergerorte = 'Zürich'
 where (nachname, vorname) = ('Missbach', 'Andreas');
+
+update person
+set buergerorte = 'Plaffeien'
+where (nachname, vorname) = ('Neuhaus', 'Christian');
+
+update person
+set buergerorte = 'Bern'
+where (nachname, vorname) = ('de Quervain', 'Anna');
+
+update person
+set buergerorte = 'Suhr'
+where (nachname, vorname) = ('Kähr', 'Thomas');
+
+update person
+set buergerorte = 'Sevelen'
+where (nachname, vorname) = ('Litscher', 'Monika');
