@@ -3,13 +3,14 @@
 
 import argparse
 import json
-import ndjson
 import os
+import sqlite3
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import mysql.connector
+import ndjson
 import regex as re
 import requests
 from dotenv import dotenv_values
@@ -19,6 +20,8 @@ from namematch.lobbywatch import PersonType, NameSet, create_matchers_from_datab
 from namematch.namematcher import MatchFormat, NameMatcher, Name
 
 config = {**dotenv_values(".env"), **os.environ}
+sqlite_conn = sqlite3.connect(config["FTS_DB_FILE"])
+sqlite_cur = sqlite_conn.cursor()
 
 req_headers = {'Accept': 'application/json'}
 
@@ -93,7 +96,13 @@ def load_publications(ref_date, cache_dir):
                 if zefix_file:
                     zefix_file.parent.mkdir(parents=True, exist_ok=True)
                     with open(zefix_file, 'x') as f:
-                        ndjson.dump(json.loads(resp.content), f)
+                        json_data = json.loads(resp.content)
+                        ndjson.dump(json_data, f)
+                        sqlite_cur.executemany(
+                            'insert into zefix(company_name, company_ehraid, publ_date, publ_id, publ_message) values (?,?,?,?,?)',
+                            [(r['companyShort']['name'], r['companyShort']['ehraid'],
+                              r['sogcPublication']['registryOfCommerceJournalDate'],
+                              r['sogcPublication']['sogcId'], r['sogcPublication']['message']) for r in json_data])
     with open(zefix_file, 'r', encoding='utf-8') as f:
         return ndjson.load(f)
 
@@ -363,3 +372,4 @@ if __name__ == "__main__":
     for proc in processors:
         proc.finalize()
     connection.commit()
+    sqlite_conn.commit()
