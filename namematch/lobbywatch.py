@@ -78,3 +78,9 @@ def create_matchers_from_database(cursor, ref_date, name_set=NameSet.CURRENT):
     else:
         return [NameMatcher(
             create_parliamentarian_names(cursor, ref_date, name_set) + create_lobbyist_names(cursor, ref_date, name_set))]
+
+
+def is_ambiguous_name(name):
+    # 383: christophe clivaz
+    # 1037: michel rudin
+    return type(name.id) is tuple and name.id in ((PersonType.PARLIAMENTARIAN, 383),(PersonType.LOBBYIST, 1037),)

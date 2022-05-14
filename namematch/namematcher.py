@@ -36,7 +36,7 @@ class NameMatch:
     end: int
 
     def format(self, emoji):
-        return f'{str(self.message[0:self.start], "utf-8")}{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}{str(self.message[self.end:], "utf-8")}'.strip()
+        return f'{str(self.message[0:self.start], "utf-8")}{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji[::-1]}{str(self.message[self.end:], "utf-8")}'.strip()
 
     def content(self, emoji):
         return str(self.message[self.start:self.end], "utf-8") if emoji == '' else f'{emoji}{str(self.message[self.start:self.end], "utf-8")}{emoji}'
