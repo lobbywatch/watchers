@@ -174,6 +174,9 @@ class NameMatcher:
         if 'Biel' in buergerorte:
             buergerorte.append('Biel/Bienne')
             buergerorte.append('Bienne')
+        for i in [re.match('St-(.*)', item) for item in buergerorte]:
+            if i:
+                buergerorte.append('Saint-' + i.group(1))
 
         if format == MatchFormat.SHAB_STD:
             result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '(?=[;, ]|$))'
