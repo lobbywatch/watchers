@@ -40,6 +40,10 @@ def create_parliamentarian_names(mycursor, ref_date, name_set):
             n = Name((PersonType.PARLIAMENTARIAN, row[0]), row[1],
                      tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
                      tuple((row[5] + ';Randogne').split(';')))
+        elif row[0] == 390:
+            n = Name((PersonType.PARLIAMENTARIAN, row[0]), row[1],
+                     tuple(row[2].split(' ')) if row[2] else None, row[3], row[4],
+                     tuple((row[5] + ';Auvernier').split(';')))
         else:
             n = Name((PersonType.PARLIAMENTARIAN, row[0]), row[1], tuple(row[2].split(' ')) if row[2] else None, row[3],
                      row[4], tuple(row[5].split(';')) if row[5] else None)
