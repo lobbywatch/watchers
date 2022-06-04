@@ -4,6 +4,6 @@ __pycache__/
 *$py.class
 
 /.idea
-.env
+*.env
 
 /urls-test.yaml
