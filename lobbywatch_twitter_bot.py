@@ -15,7 +15,7 @@ import unicodedata
 from dotenv import dotenv_values
 from slack_sdk import WebClient
 
-config = {**dotenv_values(".env"), **os.environ}
+config = {**dotenv_values("twitterbot.env"), **os.environ}
 
 parser = argparse.ArgumentParser(description='Kommuniziert neu freigegebene Interessenbindungen als Post auf Twitter.')
 parser.add_argument('--dry-run', action=argparse.BooleanOptionalAction)
@@ -172,8 +172,8 @@ if __name__ == "__main__":
     # 3. ssh -O exit lobbywatch; rm ~/lobbywatch.socket
 
     connection = mysql.connector.connect(
-        host=config["DB_HOST"],
-        # unix_socket=config["DB_SOCKET"],
+        # host=config["DB_HOST"],
+        unix_socket=config["DB_SOCKET"],
         database=config["DB_DATABASE"],
         user=config['DB_USER'],
         password=config['DB_PASSWORD'],
