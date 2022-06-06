@@ -765,3 +765,15 @@ where (nachname, vorname) = ('Kähr', 'Thomas');
 update person
 set buergerorte = 'Sevelen'
 where (nachname, vorname) = ('Litscher', 'Monika');
+
+update person
+set buergerorte = 'Froideville'
+where (nachname, vorname) = ('Martin', 'Dominique');
+
+update person
+set buergerorte = 'Oberbuchsiten;Oensingen'
+where (nachname, vorname) = ('Stefan', 'Nünlist');
+
+update person
+set buergerorte = 'Oberiberg'
+where (nachname, vorname) = ('Frank', 'Marty');
