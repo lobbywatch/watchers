@@ -144,7 +144,7 @@ class NameMatcher:
 
         lastname = self.__last_name_pattern(n.last)
         firstname = n.first + '(?: ' + ' '.join(n.middle) + ')?' if n.middle else n.first
-        buergerorte = list(map(lambda o: (o if o.find('(') == -1 else o[0:o.find('(')]).strip(), n.citizenships)) if n.citizenships else []
+        buergerorte = list(map(lambda o: (o.strip() if o.find('(') == -1 else o[0:o.find('(')]).strip(), n.citizenships)) if n.citizenships else []
         if 'Zürich' in buergerorte:
             buergerorte.append('Zurich')
             buergerorte.append('Zurigo')
