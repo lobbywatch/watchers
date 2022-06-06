@@ -89,7 +89,8 @@ def is_ambiguous_name(name):
     # 807: michel rudin
     # 963: matthias müller
     # 329: irène kälin
+    # 853: andreas binder
     return type(name.id) is tuple and name.id in (
         (PersonType.PARLIAMENTARIAN, 383), (PersonType.LOBBYIST, 807), (PersonType.LOBBYIST, 963),
-        (PersonType.PARLIAMENTARIAN, 329),
+        (PersonType.PARLIAMENTARIAN, 329), (PersonType.LOBBYIST, 853)
     )
