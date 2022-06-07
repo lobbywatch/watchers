@@ -168,7 +168,7 @@ if __name__ == "__main__":
                   + "Interessenbindung: %interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
                   + "%parlamentarier_mention%? %parlamentarier_page%"
 
-    if config["SSH_HOST"]:
+    if config.get("SSH_HOST"):
         tunnel = SSHTunnelForwarder(
                 (config["SSH_HOST"], int(config["SSH_PORT"])),
                 ssh_username=config["SSH_USER"],
