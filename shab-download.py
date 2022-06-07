@@ -5,15 +5,17 @@ import argparse
 import json
 import os
 import sqlite3
-import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import mysql.connector
 import ndjson
+import paramiko
 import regex as re
 import requests
+import sys
 from dotenv import dotenv_values
+from sshtunnel import SSHTunnelForwarder
 
 import namematch.lobbywatch
 from namematch.lobbywatch import PersonType, NameSet, create_matchers_from_database
@@ -295,9 +297,23 @@ if __name__ == "__main__":
         print('error: from_date and to_date must not be in the future')
         sys.exit(1)
 
+    if config["SSH_HOST"]:
+        tunnel = SSHTunnelForwarder(
+            (config["SSH_HOST"], int(config["SSH_PORT"])),
+            ssh_username=config["SSH_USER"],
+            ssh_pkey=paramiko.RSAKey.from_private_key_file(filename=config["SSH_PKEY_FILE"]),
+            remote_bind_address=(config["DB_HOST"], int(config["DB_PORT"])))
+        tunnel.start()
+        host = '127.0.0.1'
+        port = tunnel.local_bind_port
+    else:
+        host = config["DB_HOST"]
+        port = int(config["DB_PORT"])
+
     connection = mysql.connector.connect(
-        host=config["DB_HOST"],
-        database="lobbywatch_public",
+        host=host,
+        port=port,
+        database=config["DB_DATABASE"],
         user=config['DB_USER'],
         password=config['DB_PASSWORD'],
         use_unicode=True
