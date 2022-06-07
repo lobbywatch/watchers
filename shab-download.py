@@ -297,7 +297,7 @@ if __name__ == "__main__":
         print('error: from_date and to_date must not be in the future')
         sys.exit(1)
 
-    if config["SSH_HOST"]:
+    if config.get("SSH_HOST"):
         tunnel = SSHTunnelForwarder(
             (config["SSH_HOST"], int(config["SSH_PORT"])),
             ssh_username=config["SSH_USER"],
