@@ -17,3 +17,8 @@ beautifulsoup4~=4.10.0
 playwright~=1.18.1
 Scrapy~=2.5.1
 lxml==4.7.1
+
+ndjson~=0.3.1
+paramiko~=2.11.0
+sshtunnel~=0.4.0
+tweepy~=4.4.0

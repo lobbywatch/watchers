@@ -8,12 +8,14 @@ from collections import namedtuple
 from pathlib import Path
 
 import mysql.connector
+import paramiko
 import sys
 import time
 import tweepy
 import unicodedata
 from dotenv import dotenv_values
 from slack_sdk import WebClient
+from sshtunnel import SSHTunnelForwarder
 
 config = {**dotenv_values("twitterbot.env"), **os.environ}
 
@@ -154,7 +156,7 @@ if __name__ == "__main__":
     except FileNotFoundError:
         last_message_time = 0
 
-    if last_message_time + 7200 > time.time():
+    if last_message_time + 2*60*60 > time.time():
         print('last message was posted less than one hour ago')
         sys.exit()
 
@@ -166,14 +168,22 @@ if __name__ == "__main__":
                   + "Interessenbindung: %interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
                   + "%parlamentarier_mention%? %parlamentarier_page%"
 
-    # socket connection:
-    # 1. ssh -f lobbywatch -N
-    # 2. mysql -u lobbywat_query -p -S ~/lobbywatch.socket lobbywat_lobbywatch -A
-    # 3. ssh -O exit lobbywatch; rm ~/lobbywatch.socket
+    if config["SSH_HOST"]:
+        tunnel = SSHTunnelForwarder(
+                (config["SSH_HOST"], int(config["SSH_PORT"])),
+                ssh_username=config["SSH_USER"],
+                ssh_pkey=paramiko.RSAKey.from_private_key_file(filename=config["SSH_PKEY_FILE"]),
+                remote_bind_address=(config["DB_HOST"], int(config["DB_PORT"])))
+        tunnel.start()
+        host = '127.0.0.1'
+        port = tunnel.local_bind_port
+    else:
+        host = config["DB_HOST"]
+        port = int(config["DB_PORT"])
 
     connection = mysql.connector.connect(
-        # host=config["DB_HOST"],
-        unix_socket=config["DB_SOCKET"],
+        host=host,
+        port=port,
         database=config["DB_DATABASE"],
         user=config['DB_USER'],
         password=config['DB_PASSWORD'],
@@ -224,6 +234,7 @@ if __name__ == "__main__":
 
     fields = [md[0] for md in cursor.description]
     for row in [dict(zip(fields, row)) for row in cursor.fetchall()]:
+        # print(row['id'])
         status = 'ignoriert' if row['interessenbindung_id'] is None else 'verarbeitet'
         if status == 'verarbeitet':
             pa = Person(geschlecht=row['parlamentarier_geschlecht'])
@@ -264,3 +275,4 @@ if __name__ == "__main__":
 
     if not args.dry_run:
         connection.commit()
+    tunnel.stop()
