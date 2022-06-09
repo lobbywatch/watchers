@@ -7,21 +7,23 @@ import subprocess
 from datetime import date
 from urllib.parse import urlparse
 
-from unicodedata import normalize
 from dotenv import dotenv_values
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_bolt.context.respond.respond import Respond
+from unicodedata import normalize
 
 # Install the Slack app and get xoxb- token in advance
 config = dotenv_values(".env")
 app = App(token=config["SLACK_BOT_TOKEN"])
 logging.basicConfig(level=logging.DEBUG)
 
+
 @app.command("/add-website")
 def add_website(ack, body, respond, command, logger):
     ack()
     logger.info(body)
-    if command.get("text"):
+    if "text" in command:
         respond(add_website(command["text"], logger))
 
 
@@ -53,17 +55,187 @@ def handle_mention(body, say, logger):
             url = url[:url.find(' ')]
         say(add_website(url, logger), thread_ts=body["event"]["event_ts"])
     else:
-        say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"], ephemeral_user=True)
+        say('Sorry, I only respond to messages containing the text "add-website <url>"', thread_ts=body["event"]["event_ts"],
+            ephemeral_user=True)
+
+
+initial_messages = {}
+
+
+@app.action(re.compile("tweet_edit_(de|fr)"))
+def tweet_edit(ack, body, respond, logger):
+    ack()
+    logger.debug(body)
+    initial_messages[body["response_url"]] = body['message']
+
+    if "trigger_id" not in body:
+        pass
+
+    lang = 'de' if body['actions'][0]['action_id'] == 'tweet_edit_de' else 'fr'
+    app.client.views_open(
+        # Pass a valid trigger_id within 3 seconds of receiving it
+        trigger_id=body["trigger_id"],
+        # View payload
+        view={
+            "type": "modal",
+            # View identifier
+            "callback_id": "tweet_edit_view_" + lang,
+            "private_metadata": body["response_url"],
+            "title": {"type": "plain_text", "text": "Lobbybot"},
+            "submit": {"type": "plain_text", "text": "Submit"},
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"Hier kann der *{'deutsche' if lang == 'de' else 'französische'}* Tweet bearbeitet werden"
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "tweet_input_block",
+                    "label": {"type": "plain_text", "text": "Tweet Text"},
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "tweet_text",
+                        "initial_value": body['message']['blocks'][0]['fields'][2 if lang == 'de' else 3]['text'],
+                        "multiline": True,
+                        "focus_on_load": True
+                    }
+                }
+            ]
+        }
+    )
+
+
+@app.view(re.compile("tweet_edit_view_(de|fr)"))
+def handle_submission(ack, body, client, view, logger):
+    # Assume there's an input block with `input_c` as the block_id and `dreamy_input`
+    tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
+    user = body["user"]["id"]
+    # Validate the inputs
+    errors = {}
+    if tweet_text is not None and len(tweet_text) > 280:
+        errors["tweet_input_block"] = f"Der Tweet darf nicht länger als 280 Zeichen sein: {len(tweet_text)}"
+    if len(errors) > 0:
+        ack(response_action="errors", errors=errors)
+        return
+    # Acknowledge the view_submission request and close the modal
+    ack()
+    # Do whatever you want with the input data - here we're saving it to a DB
+    # then sending the user a verification of their submission
+
+    # Message to send user
+    msg = ""
+    try:
+        # Save to DB
+        msg = f"Your submission of {tweet_text} was successful"
+    except Exception as e:
+        # Handle error
+        msg = "There was an error with your submission"
+
+    # logger.debug(body)
+
+    lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
+    message = initial_messages[body['view']['private_metadata']]
+    message['blocks'][0]['fields'][2 if lang == 'de' else 3]['text'] = tweet_text
+    respond = Respond(response_url=body['view']['private_metadata'])
+    respond(replace_original=True, blocks=message['blocks'])
+    del initial_messages[body['view']['private_metadata']]
+
+
+@app.action("tweet_post")
+def tweet_post(ack, body, respond, logger):
+    ack()
+    body['message']['blocks'].pop()
+    respond(replace_original=True, blocks=body['message']['blocks'])
+
+
+@app.action("tweet_cancel")
+def tweet_cancel(ack, body, respond, logger):
+    ack()
+    body['message']['blocks'].pop()
+    del body['message']['blocks'][0]['fields']
+    respond(replace_original=True, blocks=body['message']['blocks'])
 
 
 @app.event("message")
-def handle_message_events(body, logger):
-    logger.info(body)
-
-
-@app.action(re.compile("[0-9]+"))
-def handle_some_action(ack, body, respond, logger):
-    handle_match_checkbox_selection(ack, body, respond, logger)
+def handle_message_events(ack, body, logger, say):
+    ack()
+    # logger.debug(body)
+    if body['event']['channel_type'] == 'im' and "text" in body['event'] and body['event']['text'] == 'test':
+        text_blocks = [
+            {
+                "type": "section",
+                "text": {
+                    "text": "Tweets für <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13592|Gapany, Johanna - Netzwerk Future>",
+                    "type": "mrkdwn"
+                },
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Deutsch*"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Französisch*"
+                    },
+                    {
+                        "type": "plain_text",
+                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) hat eine neue Interessenbindung: Vorstand bei Verein FDP-Kampagnen. Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
+                    },
+                    {
+                        "type": "plain_text",
+                        "text": "#LobbyNews Bonjour Andri Silberschmidt (FDP/ZH). Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
+                    }
+                ]
+            },
+            {
+                "type": "actions",
+                "block_id": "actionblock789",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Posten"
+                        },
+                        "style": "primary",
+                        "value": "click_me_456",
+                        "action_id": "tweet_post"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Bearbeiten DE"
+                        },
+                        "value": "click_me_456",
+                        "action_id": "tweet_edit_de"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Bearbeiten FR"
+                        },
+                        "value": "click_me_456",
+                        "action_id": "tweet_edit_fr"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Verwerfen"
+                        },
+                        "style": "danger",
+                        "value": "click_me_456",
+                        "action_id": "tweet_cancel"
+                    },
+                ]
+            },
+        ]
+        say(text='dummy', blocks=text_blocks)
 
 
 @app.action(re.compile("match_at_offset-[0-9]+"))
@@ -77,6 +249,7 @@ def handle_match_checkbox_selection(ack, body, respond, logger):
         else:
             b["accessory"].pop("initial_options", None)
     respond(replace_original=True, blocks=body["message"]["blocks"])
+
 
 @app.action("datepicker123")
 def handle_some_action(ack, body, logger):
