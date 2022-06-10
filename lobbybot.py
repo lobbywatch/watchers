@@ -18,6 +18,8 @@ config = dotenv_values(".env")
 app = App(token=config["SLACK_BOT_TOKEN"])
 logging.basicConfig(level=logging.DEBUG)
 
+URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
+
 
 @app.command("/add-website")
 def add_website(ack, body, respond, command, logger):
@@ -138,6 +140,8 @@ def handle_submission(ack, body, client, view, logger):
 
     lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
     message = initial_messages[body['view']['private_metadata']]
+    length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
+    message['blocks'][0]['fields'][0 if lang == 'de' else 1]['text'] = f"*{'Deutsch' if lang == 'de' else 'Französisch'} ({length}/280)*"
     message['blocks'][0]['fields'][2 if lang == 'de' else 3]['text'] = tweet_text
     respond = Respond(response_url=body['view']['private_metadata'])
     respond(replace_original=True, blocks=message['blocks'])
