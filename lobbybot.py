@@ -148,7 +148,16 @@ def handle_submission(ack, body, client, view, logger):
 def tweet_post(ack, body, respond, logger):
     ack()
     body['message']['blocks'].pop()
-    respond(replace_original=True, blocks=body['message']['blocks'])
+    body['message']['blocks'].append(
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Die Tweets wurden soeben gepostet: https://twitter.com/Lobbywatch_CH/status/1535151127951466496 und https://twitter.com/Lobbywatch_CH/status/1534777311425220608"
+            }
+        }
+    )
+    respond(replace_original=True, blocks=body['message']['blocks'], unfurl_links=True)
 
 
 @app.action("tweet_cancel")
@@ -156,6 +165,15 @@ def tweet_cancel(ack, body, respond, logger):
     ack()
     body['message']['blocks'].pop()
     del body['message']['blocks'][0]['fields']
+    body['message']['blocks'].append(
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten."
+            }
+        }
+    )
     respond(replace_original=True, blocks=body['message']['blocks'])
 
 
@@ -168,25 +186,25 @@ def handle_message_events(ack, body, logger, say):
             {
                 "type": "section",
                 "text": {
-                    "text": "Tweets für <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13592|Gapany, Johanna - Netzwerk Future>",
+                    "text": "Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13592|Gapany, Johanna - Netzwerk Future>",
                     "type": "mrkdwn"
                 },
                 "fields": [
                     {
                         "type": "mrkdwn",
-                        "text": "*Deutsch*"
+                        "text": "*Deutsch (176/280)*"
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Französisch*"
+                        "text": "*Französisch (247/280)*"
                     },
                     {
                         "type": "plain_text",
-                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) hat eine neue Interessenbindung: Vorstand bei Verein FDP-Kampagnen. Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
+                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) engagiert sich jetzt auch hier: Vorstand bei Verein FDP-Kampagnen. Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
                     },
                     {
                         "type": "plain_text",
-                        "text": "#LobbyNews Bonjour Andri Silberschmidt (FDP/ZH). Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
+                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH)a un nouveau lien d'intérêt : il est membre du conseil de fondation de la Stiftung Wohnungen für kinderreiche Familien. L'avez-vous déjà signalé aux Services du Parlement @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
                     }
                 ]
             },
