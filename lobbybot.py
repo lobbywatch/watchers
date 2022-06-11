@@ -190,7 +190,7 @@ def handle_message_events(ack, body, logger, say):
             {
                 "type": "section",
                 "text": {
-                    "text": "Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13592|Gapany, Johanna - Netzwerk Future>",
+                    "text": "Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13500|Andri Silberschmidt - Verein FDP-Kampagnen>",
                     "type": "mrkdwn"
                 },
                 "fields": [
