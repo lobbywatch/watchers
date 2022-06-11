@@ -249,7 +249,7 @@ def post_slack_message(pa, ib, org, row):
                 ]
             },
         ]
-        app.client.chat_postMessage(channel='knut-test', blocks=text_blocks)
+        app.client.chat_postMessage(channel='social-media-bot', blocks=text_blocks)
 
 
 def db_connection():
