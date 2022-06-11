@@ -230,6 +230,19 @@ def tweet_post(ack, body, respond, logger):
 @app.action("tweet_cancel")
 def tweet_cancel(ack, body, respond, logger):
     ack()
+
+    freigabe_id = body['message']['blocks'][1]['block_id']
+    with db_connection() as (tunnel, connection):
+        cursor = connection.cursor()
+        cursor.execute("""
+                    update freigabe_queue
+                    set    status = 'ignoriert',
+                           updated_date = now()
+                    where  id = %s
+                """, (freigabe_id, ))
+        connection.commit()
+        tunnel.stop()
+
     body['message']['blocks'].pop()
     del body['message']['blocks'][0]['fields']
     body['message']['blocks'].append(
