@@ -200,7 +200,7 @@ def handle_message_events(ack, body, logger, say):
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "*Französisch (248/280)*"
+                        "text": "*Französisch (197/280)*"
                     },
                     {
                         "type": "plain_text",
@@ -208,7 +208,7 @@ def handle_message_events(ack, body, logger, say):
                     },
                     {
                         "type": "plain_text",
-                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) a un nouveau lien d'intérêt : il est membre du conseil de fondation de la Stiftung Wohnungen für kinderreiche Familien. L'avez-vous déjà signalé aux Services du Parlement @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
+                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) a un nouveau lien d'intérêt : il est Comité de Verein FDP-Kampagnen. L'avez-vous déjà signalé aux Services du Parlement @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
                     }
                 ]
             },
