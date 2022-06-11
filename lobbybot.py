@@ -176,10 +176,29 @@ def handle_submission(ack, body, client, view, logger):
 def tweet_post(ack, body, respond, logger):
     ack()
 
-    response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][2]['text'])
-    tweet_de_id = response.data['id'] if response and len(response.errors) == 0 else None
-    response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][3]['text'])
-    tweet_fr_id = response.data['id'] if response and len(response.errors) == 0 else None
+    errors = {}
+    tweet_de_id = None
+    tweet_fr_id = None
+
+    try:
+        response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][2]['text'])
+        if response and len(response.errors) > 0:
+            errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {response.errors}"
+        else:
+            tweet_de_id = response.data['id']
+        response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][3]['text'])
+        if response and len(response.errors) > 0:
+            errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {response.errors}"
+        else:
+            tweet_fr_id = response.data['id']
+    except tweepy.errors.TweepyException as e:
+        errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {e}"
+
+    if len(errors) > 0:
+        ack(response_action="errors", errors=errors)
+        return
+    elif tweet_de_id is None or tweet_fr_id is None:
+        return
 
     freigabe_id = body['message']['blocks'][1]['block_id']
     with db_connection() as (tunnel, connection):

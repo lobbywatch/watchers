@@ -181,6 +181,7 @@ def post_slack_message(pa, ib, org, row):
         text_blocks = [
             {
                 "type": "section",
+                "block_id": "tweet_block",
                 "text": {
                     "text": f"Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0={row['interessenbindung_id']}|{row['parlamentarier_vorname_kurz'] if row['parlamentarier_vorname_kurz'] else row['parlamentarier_vorname']} {row['parlamentarier_nachname']} - {row['organisation_name_de']}>",
                     "type": "mrkdwn"
