@@ -5,38 +5,39 @@ import argparse
 import os
 import urllib.parse
 from collections import namedtuple
-from pathlib import Path
 
 import mysql.connector
 import paramiko
-import sys
-import time
-import tweepy
+import regex as re
+import requests
 import unicodedata
 from dotenv import dotenv_values
-from slack_sdk import WebClient
+from slack_bolt import App
 from sshtunnel import SSHTunnelForwarder
 
-config = {**dotenv_values("twitterbot.env"), **os.environ}
+config = {**dotenv_values(".env"), **os.environ}
 
-parser = argparse.ArgumentParser(description='Kommuniziert neu freigegebene Interessenbindungen als Post auf Twitter.')
+parser = argparse.ArgumentParser(description='Erstellt für neu freigegebene Interessenbindungen Slack Messages womit Twitter Posts ausgelöst werden können.')
 parser.add_argument('--dry-run', action=argparse.BooleanOptionalAction)
 
+URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
 
 Person = namedtuple('Person', 'geschlecht')
 Interessenbindung = namedtuple('Interessenbindung', 'art funktion_im_gremium')
 Organisation = namedtuple('Organisation', 'rechtsform')
 
+app = App(token=config["SLACK_BOT_TOKEN"])
+
 
 def lobbywatch_bindungsart(pers, ib, org, lang):
     def translate(key):
         cursor.execute('''
-            select t.translation
+            select case when t.translation = '' then s.source else t.translation end
             from translation_source s
             join translation_target t on t.translation_source_id = s.id
-            where source = ?
-              and t.lang = ?
-        ''', (key,lang))
+            where binary source = %(key)s
+              and t.lang = %(lang)s
+        ''', {'key': key, 'lang': lang})
         return cursor.fetchone()[0]
 
     def art():
@@ -146,41 +147,124 @@ def lobbywatch_bindungsart(pers, ib, org, lang):
     #       IF(interessenbindung.funktion_im_gremium IS NULL OR TRIM(interessenbindung.funktion_im_gremium) IN ('', 'mitglied'), '', CONCAT(', ',CONCAT(UCASE(LEFT(interessenbindung.funktion_im_gremium, 1)), SUBSTRING(interessenbindung.funktion_im_gremium, 2))))";
 
 
-if __name__ == "__main__":
-    args = parser.parse_args()
+def tweet_text(template, lang, row):
+    text = template
+    text = text.replace('%parl_name%',
+                        f"{row['parlamentarier_vorname_kurz'] if row['parlamentarier_vorname_kurz'] else row['parlamentarier_vorname']} {row['parlamentarier_nachname']}")
+    text = text.replace('%parl_pronomen_fr%', f"{'elle' if row['parlamentarier_geschlecht'] == 'F' else 'il'}")
+    text = text.replace('%parl_partei%', row[f'parlamentarier_partei_{lang}'])
+    text = text.replace('%parl_kanton%', row['parlamentarier_kanton'])
+    text = text.replace('%interessenbindung_funktion%',
+                        row[f'interessenbindung_beschreibung_{lang}'] if row[
+                            f'interessenbindung_beschreibung_{lang}'] else lobbywatch_bindungsart(pa, ib, org, lang))
+    text = text.replace('%organisation_name%', row[f'organisation_name_{lang}'] if row[f'organisation_name_{lang}'] else row['organisation_name_de'])
+    text = text.replace('%parlamentarier_mention%',
+                              f"@{row['parlamentarier_twitter_name']}" if row['parlamentarier_twitter_name'] else '#' + (
+                                          row['parlamentarier_vorname'] + row['parlamentarier_nachname']).translate(
+                                  str.maketrans('', '', ' \'-')))
+    text = text.replace('%parlamentarier_page%',
+                              f"https://lobbywatch.ch/{lang}/daten/parlamentarier/{row['parlamentarier_id']}/{urllib.parse.quote(row['parlamentarier_vorname'] + ' ' + row['parlamentarier_nachname'])}")
+    return text
 
-    os.makedirs(f'{str(Path.home())}/.lobbywatch', exist_ok=True)
-    try:
-        with open(f'{str(Path.home())}/.lobbywatch/twitter-bot-last-message', 'r') as f:
-            last_message_time = int(f.readline())
-    except FileNotFoundError:
-        last_message_time = 0
 
-    if last_message_time + 2*60*60 > time.time():
-        print('last message was posted less than one hour ago')
-        sys.exit()
+def post_slack_message(pa, ib, org, row):
+    text_de = tweet_text(templates['de'], 'de', row)
+    length_de = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_de)))
+    text_fr = tweet_text(templates['fr'], 'fr', row)
+    length_fr = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_fr)))
 
-    client = tweepy.Client(
-        bearer_token=config['TWITTER_ACCESS_TOKEN']
-    )
+    if args.dry_run:
+        print(length_de, text_de)
+        print(length_fr, text_fr)
+    else:
+        # if length > 280:
+        text_blocks = [
+            {
+                "type": "section",
+                "text": {
+                    "text": f"Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0={row['interessenbindung_id']}|{row['parlamentarier_vorname_kurz'] if row['parlamentarier_vorname_kurz'] else row['parlamentarier_vorname']} {row['parlamentarier_nachname']} - {row['organisation_name_de']}>",
+                    "type": "mrkdwn"
+                },
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Deutsch ({length_de}/280)*"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Französisch ({length_fr}/280)*"
+                    },
+                    {
+                        "type": "plain_text",
+                        "text": text_de
+                    },
+                    {
+                        "type": "plain_text",
+                        "text": text_fr
+                    }
+                ]
+            },
+            {
+                "type": "actions",
+                "block_id": f"{row['id']}",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Posten"
+                        },
+                        "style": "primary",
+                        "value": "click_me_456",
+                        "action_id": "tweet_post"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Bearbeiten DE"
+                        },
+                        "value": "click_me_456",
+                        "action_id": "tweet_edit_de"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Bearbeiten FR"
+                        },
+                        "value": "click_me_456",
+                        "action_id": "tweet_edit_fr"
+                    },
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Verwerfen"
+                        },
+                        "style": "danger",
+                        "value": "click_me_456",
+                        "action_id": "tweet_cancel"
+                    },
+                ]
+            },
+        ]
+        app.client.chat_postMessage(channel='knut-test', blocks=text_blocks)
 
-    template_de = "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat eine neue " \
-                  + "Interessenbindung: %interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
-                  + "%parlamentarier_mention%? %parlamentarier_page%"
 
-    if config.get("SSH_HOST"):
+def db_connection():
+    if "SSH_HOST" in config:
         tunnel = SSHTunnelForwarder(
-                (config["SSH_HOST"], int(config["SSH_PORT"])),
-                ssh_username=config["SSH_USER"],
-                ssh_pkey=paramiko.RSAKey.from_private_key_file(filename=config["SSH_PKEY_FILE"]),
-                remote_bind_address=(config["DB_HOST"], int(config["DB_PORT"])))
+            (config["SSH_HOST"], int(config["SSH_PORT"])),
+            ssh_username=config["SSH_USER"],
+            ssh_pkey=paramiko.RSAKey.from_private_key_file(filename=config["SSH_PKEY_FILE"]),
+            remote_bind_address=(config["DB_HOST"], int(config["DB_PORT"])))
         tunnel.start()
         host = '127.0.0.1'
         port = tunnel.local_bind_port
     else:
         host = config["DB_HOST"]
         port = int(config["DB_PORT"])
-
     connection = mysql.connector.connect(
         host=host,
         port=port,
@@ -189,6 +273,31 @@ if __name__ == "__main__":
         password=config['DB_PASSWORD'],
         use_unicode=True
     )
+    return tunnel, connection
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    # os.makedirs(f'{str(Path.home())}/.lobbywatch', exist_ok=True)
+    # try:
+    #     with open(f'{str(Path.home())}/.lobbywatch/twitter-bot-last-message', 'r') as f:
+    #         last_message_time = int(f.readline())
+    # except FileNotFoundError:
+    #     last_message_time = 0
+    #
+    # if last_message_time + 2*60*60 > time.time():
+    #     print('last message was posted less than one hour ago')
+    #     sys.exit()
+
+    templates = {'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat eine neue Interessenbindung: " \
+                  + "%interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
+                  + "%parlamentarier_mention%? %parlamentarier_page%",
+                 'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : " \
+                  "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. L'avez-vous déjà signalé aux Services du Parlement " \
+                  "%parlamentarier_mention%? %parlamentarier_page%"}
+
+    tunnel, connection = db_connection()
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -224,44 +333,32 @@ if __name__ == "__main__":
               and i.status != 'deklariert'
               and i.art != 'mitglied'
               and o.rechtsform not in ('Parlamentarische Gruppe', 'Parlamentarische Freundschaftsgruppe')
-              and coalesce(i.von, i.created_date) + interval 60 day >= now()
+              and least(coalesce(i.von, i.created_date), i.created_date) + interval 60 day >= now()
         ) i on q.objekt_id = i.interessenbindung_id and q.objekt_freigabe_datum = i.freigabe_datum
         where q.objekt_typ = 'interessenbindung'
           and q.status = 'neu'
         order by q.objekt_freigabe_datum desc, q.updated_date desc, q.objekt_id desc
-        limit 100
+        # limit 100
     """)
 
     fields = [md[0] for md in cursor.description]
     for row in [dict(zip(fields, row)) for row in cursor.fetchall()]:
-        # print(row['id'])
-        status = 'ignoriert' if row['interessenbindung_id'] is None else 'verarbeitet'
-        if status == 'verarbeitet':
+        status = None
+        if row['interessenbindung_id'] is None:
+            status = 'ignoriert'
+        else:
+            response = requests.get(f'https://cms.lobbywatch.ch/de/data/interface/v1/json/table/interessenbindung/flat/id/{row["interessenbindung_id"]}')
+            if response.status_code == 200:
+                status = 'in_triage'
+
+        if status == 'in_triage':
             pa = Person(geschlecht=row['parlamentarier_geschlecht'])
             ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'])
             org = Organisation(rechtsform=row['organisation_rechtsform'])
-            bindungsart = lobbywatch_bindungsart(pa, ib, org, 'de')
 
-            text_de = template_de
-            text_de = text_de.replace('%parl_name%', f"{row['parlamentarier_vorname_kurz'] if row['parlamentarier_vorname_kurz'] else row['parlamentarier_vorname']} {row['parlamentarier_nachname']}")
-            text_de = text_de.replace('%parl_partei%', row['parlamentarier_partei_de'])
-            text_de = text_de.replace('%parl_kanton%', row['parlamentarier_kanton'])
-            text_de = text_de.replace('%interessenbindung_funktion%', row['interessenbindung_beschreibung_de'] if row['interessenbindung_beschreibung_de'] else bindungsart)
-            text_de = text_de.replace('%organisation_name%', row['organisation_name_de'])
-            text_de = text_de.replace('%parlamentarier_mention%', f"@{row['parlamentarier_twitter_name']}" if row['parlamentarier_twitter_name'] else '#' + (row['parlamentarier_vorname']+row['parlamentarier_nachname']).translate(str.maketrans('', '', ' \'-')))
-            length = len(unicodedata.normalize('NFC', text_de)) + 2
-            text_de = text_de.replace('%parlamentarier_page%', f"https://lobbywatch.ch/de/daten/parlamentarier/{row['parlamentarier_id']}/{urllib.parse.quote(row['parlamentarier_vorname'] + ' ' + row['parlamentarier_nachname'])}")
-            if args.dry_run or True:
-                print(length, text_de)
-            else:
-                # if length > 280:
-                client = WebClient(token=config['SLACK_BOT_TOKEN'])
-                client.chat_postMessage(channel='knut-test', text=text_de)
-                # client.create_tweet(text=text_de)
-                with open(f'{str(Path.home())}/.lobbywatch/twitter-bot-last-message', 'w') as f:
-                    f.write(str(int(time.time())))
+            post_slack_message(pa, ib, org, row)
 
-        if not args.dry_run:
+        if status and not args.dry_run:
             cursor.execute("""
                 update freigabe_queue
                 set    status = %s,
@@ -269,10 +366,11 @@ if __name__ == "__main__":
                 where  id = %s
             """, (status, row['id']))
 
-        # only process one message
-        if status == 'verarbeitet':
-            break
+        # # only process one message
+        # if status == 'in_triage':
+        #     break
 
     if not args.dry_run:
         connection.commit()
-    tunnel.stop()
+    if tunnel:
+        tunnel.stop()

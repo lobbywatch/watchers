@@ -7,10 +7,14 @@ import subprocess
 from datetime import date
 from urllib.parse import urlparse
 
+import mysql.connector
+import paramiko
+import tweepy
 from dotenv import dotenv_values
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_bolt.context.respond.respond import Respond
+from sshtunnel import SSHTunnelForwarder
 from unicodedata import normalize
 
 # Install the Slack app and get xoxb- token in advance
@@ -19,6 +23,35 @@ app = App(token=config["SLACK_BOT_TOKEN"])
 logging.basicConfig(level=logging.DEBUG)
 
 URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
+
+tweepy_client = tweepy.Client(consumer_key=config['TWITTER_API_KEY'],
+                              consumer_secret=config['TWITTER_API_KEY_SECRET'],
+                              access_token=config['TWITTER_ACCESS_TOKEN'],
+                              access_token_secret=config['TWITTER_ACCESS_TOKEN_SECRET'])
+
+
+def db_connection():
+    if "SSH_HOST" in config:
+        tunnel = SSHTunnelForwarder(
+            (config["SSH_HOST"], int(config["SSH_PORT"])),
+            ssh_username=config["SSH_USER"],
+            ssh_pkey=paramiko.RSAKey.from_private_key_file(filename=config["SSH_PKEY_FILE"]),
+            remote_bind_address=(config["DB_HOST"], int(config["DB_PORT"])))
+        tunnel.start()
+        host = '127.0.0.1'
+        port = tunnel.local_bind_port
+    else:
+        host = config["DB_HOST"]
+        port = int(config["DB_PORT"])
+    connection = mysql.connector.connect(
+        host=host,
+        port=port,
+        database=config["DB_DATABASE"],
+        user=config['DB_USER'],
+        password=config['DB_PASSWORD'],
+        use_unicode=True
+    )
+    return tunnel, connection
 
 
 @app.command("/add-website")
@@ -127,17 +160,6 @@ def handle_submission(ack, body, client, view, logger):
     # Do whatever you want with the input data - here we're saving it to a DB
     # then sending the user a verification of their submission
 
-    # Message to send user
-    msg = ""
-    try:
-        # Save to DB
-        msg = f"Your submission of {tweet_text} was successful"
-    except Exception as e:
-        # Handle error
-        msg = "There was an error with your submission"
-
-    # logger.debug(body)
-
     lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
     message = initial_messages[body['view']['private_metadata']]
     length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
@@ -151,13 +173,33 @@ def handle_submission(ack, body, client, view, logger):
 @app.action("tweet_post")
 def tweet_post(ack, body, respond, logger):
     ack()
+
+    response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][2]['text'])
+    tweet_de_id = response.data['id'] if response and len(response.errors) == 0 else None
+    response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][3]['text'])
+    tweet_fr_id = response.data['id'] if response and len(response.errors) == 0 else None
+
+    freigabe_id = body['message']['blocks'][1]['block_id']
+    with db_connection() as (tunnel, connection):
+        cursor = connection.cursor()
+        cursor.execute("""
+                    update freigabe_queue
+                    set    status = 'verarbeitet',
+                           updated_date = now(),
+                           tweet_de_id = %s,
+                           tweet_fr_id = %s
+                    where  id = %s
+                """, (tweet_de_id, tweet_fr_id, freigabe_id))
+        connection.commit()
+        tunnel.stop()
+
     body['message']['blocks'].pop()
     body['message']['blocks'].append(
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Die Tweets wurden soeben gepostet: https://twitter.com/Lobbywatch_CH/status/1535151127951466496 und https://twitter.com/Lobbywatch_CH/status/1534777311425220608"
+                "text": f"Die Tweets wurden soeben gepostet: https://twitter.com/Lobbywatch_CH/status/{tweet_de_id} und https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}"
             }
         }
     )
@@ -185,79 +227,6 @@ def tweet_cancel(ack, body, respond, logger):
 def handle_message_events(ack, body, logger, say):
     ack()
     # logger.debug(body)
-    if body['event']['channel_type'] == 'im' and "text" in body['event'] and body['event']['text'] == 'test':
-        text_blocks = [
-            {
-                "type": "section",
-                "text": {
-                    "text": "Interessenbindung <https://cms.lobbywatch.ch/bearbeitung/interessenbindung.php?operation=view&pk0=13500|Andri Silberschmidt - Verein FDP-Kampagnen>",
-                    "type": "mrkdwn"
-                },
-                "fields": [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Deutsch (176/280)*"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*Französisch (197/280)*"
-                    },
-                    {
-                        "type": "plain_text",
-                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) engagiert sich jetzt auch hier: Vorstand bei Verein FDP-Kampagnen. Haben Sie das schon deklariert, @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
-                    },
-                    {
-                        "type": "plain_text",
-                        "text": "#LobbyNews Andri Silberschmidt (FDP/ZH) a un nouveau lien d'intérêt : il est Comité de Verein FDP-Kampagnen. L'avez-vous déjà signalé aux Services du Parlement @andrisilber? https://lobbywatch.ch/de/daten/parlamentarier/353/Andri%20Silberschmidt"
-                    }
-                ]
-            },
-            {
-                "type": "actions",
-                "block_id": "actionblock789",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Posten"
-                        },
-                        "style": "primary",
-                        "value": "click_me_456",
-                        "action_id": "tweet_post"
-                    },
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Bearbeiten DE"
-                        },
-                        "value": "click_me_456",
-                        "action_id": "tweet_edit_de"
-                    },
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Bearbeiten FR"
-                        },
-                        "value": "click_me_456",
-                        "action_id": "tweet_edit_fr"
-                    },
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Verwerfen"
-                        },
-                        "style": "danger",
-                        "value": "click_me_456",
-                        "action_id": "tweet_cancel"
-                    },
-                ]
-            },
-        ]
-        say(text='dummy', blocks=text_blocks)
 
 
 @app.action(re.compile("match_at_offset-[0-9]+"))
