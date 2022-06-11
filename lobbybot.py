@@ -41,8 +41,10 @@ def db_connection():
         host = '127.0.0.1'
         port = tunnel.local_bind_port
     else:
+        tunnel = None
         host = config["DB_HOST"]
         port = int(config["DB_PORT"])
+
     connection = mysql.connector.connect(
         host=host,
         port=port,
