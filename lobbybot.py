@@ -201,18 +201,22 @@ def tweet_post(ack, body, respond, logger):
         return
 
     freigabe_id = body['message']['blocks'][1]['block_id']
-    with db_connection() as (tunnel, connection):
-        cursor = connection.cursor()
-        cursor.execute("""
-                    update freigabe_queue
-                    set    status = 'verarbeitet',
-                           updated_date = now(),
-                           tweet_de_id = %s,
-                           tweet_fr_id = %s
-                    where  id = %s
-                """, (tweet_de_id, tweet_fr_id, freigabe_id))
-        connection.commit()
-        tunnel.stop()
+    tunnel, connection = db_connection()
+    try:
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute("""
+                        update freigabe_queue
+                        set    status = 'verarbeitet',
+                               updated_date = now(),
+                               tweet_de_id = %s,
+                               tweet_fr_id = %s
+                        where  id = %s
+                    """, (tweet_de_id, tweet_fr_id, freigabe_id))
+            connection.commit()
+    finally:
+        if tunnel:
+            tunnel.stop()
 
     body['message']['blocks'].pop()
     body['message']['blocks'].append(
