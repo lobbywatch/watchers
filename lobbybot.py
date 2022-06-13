@@ -267,7 +267,7 @@ def handle_message_events(ack, body, logger, say):
     # logger.debug(body)
 
 
-@app.action(re.compile("match_at_offset-[0-9]+"))
+@app.action(re.compile("(match_at_offset|publication_matches)-[0-9]+"))
 def handle_match_checkbox_selection(ack, body, respond, logger):
     ack()
     logger.info(body)
