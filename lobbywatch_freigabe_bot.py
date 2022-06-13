@@ -37,6 +37,8 @@ def lobbywatch_bindungsart(pers, ib, org, lang):
             join translation_target t on t.translation_source_id = s.id
             where binary source = %(key)s
               and t.lang = %(lang)s
+              and s.location = '_lobbywatch_bindungsart()'
+              and s.context = ''
         ''', {'key': key, 'lang': lang})
         return cursor.fetchone()[0]
 
