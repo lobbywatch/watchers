@@ -221,10 +221,20 @@ def tweet_post(ack, body, respond, logger):
     body['message']['blocks'].pop()
     body['message']['blocks'].append(
         {
+            "type": "divider"
+        }
+    )
+    body['message']['blocks'].append(
+        {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": f"Die Tweets wurden soeben gepostet: https://twitter.com/Lobbywatch_CH/status/{tweet_de_id} und https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}"
+            },
+            "accessory": {
+                "type": "image",
+                "image_url": "https://img.icons8.com/color/48/undefined/ok--v1.png",
+                "alt_text": "verarbeitet"
             }
         }
     )
@@ -251,10 +261,20 @@ def tweet_cancel(ack, body, respond, logger):
     del body['message']['blocks'][0]['fields']
     body['message']['blocks'].append(
         {
+            "type": "divider"
+        }
+    )
+    body['message']['blocks'].append(
+        {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": "Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten."
+            },
+            "accessory": {
+                "type": "image",
+                "image_url": "https://img.icons8.com/ios-filled/50/undefined/no-entry.png",
+                "alt_text": "ignoriert"
             }
         }
     )
