@@ -218,7 +218,7 @@ def post_slack_message(pa, ib, org, row):
                             "text": "Posten"
                         },
                         "style": "primary",
-                        "value": "click_me_456",
+                        "value": f"{row['id']}",
                         "action_id": "tweet_post"
                     },
                     {
@@ -227,7 +227,7 @@ def post_slack_message(pa, ib, org, row):
                             "type": "plain_text",
                             "text": "Bearbeiten DE"
                         },
-                        "value": "click_me_456",
+                        "value": f"{row['id']}",
                         "action_id": "tweet_edit_de"
                     },
                     {
@@ -236,7 +236,7 @@ def post_slack_message(pa, ib, org, row):
                             "type": "plain_text",
                             "text": "Bearbeiten FR"
                         },
-                        "value": "click_me_456",
+                        "value": f"{row['id']}",
                         "action_id": "tweet_edit_fr"
                     },
                     {
@@ -246,7 +246,7 @@ def post_slack_message(pa, ib, org, row):
                             "text": "Verwerfen"
                         },
                         "style": "danger",
-                        "value": "click_me_456",
+                        "value": f"{row['id']}",
                         "action_id": "tweet_cancel"
                     },
                 ]

@@ -147,9 +147,7 @@ def tweet_edit(ack, body, respond, logger):
 
 @app.view(re.compile("tweet_edit_view_(de|fr)"))
 def handle_submission(ack, body, client, view, logger):
-    # Assume there's an input block with `input_c` as the block_id and `dreamy_input`
     tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
-    user = body["user"]["id"]
     # Validate the inputs
     errors = {}
     if tweet_text is not None and len(tweet_text) > 280:
@@ -159,8 +157,6 @@ def handle_submission(ack, body, client, view, logger):
         return
     # Acknowledge the view_submission request and close the modal
     ack()
-    # Do whatever you want with the input data - here we're saving it to a DB
-    # then sending the user a verification of their submission
 
     lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
     message = initial_messages[body['view']['private_metadata']]
