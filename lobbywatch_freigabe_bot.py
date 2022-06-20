@@ -294,7 +294,7 @@ if __name__ == "__main__":
     #     print('last message was posted less than one hour ago')
     #     sys.exit()
 
-    templates = {'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat eine neue Interessenbindung: " \
+    templates = {'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat ein neues Lobbymandat: " \
                   + "%interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
                   + "%parlamentarier_mention%? %parlamentarier_page%",
                  'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : " \
