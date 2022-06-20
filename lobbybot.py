@@ -148,10 +148,15 @@ def tweet_edit(ack, body, respond, logger):
 @app.view(re.compile("tweet_edit_view_(de|fr)"))
 def handle_submission(ack, body, client, view, logger):
     tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
+    if tweet_text is None or len(tweet_text) == 0:
+        ack(response_action="errors", errors={'tweet_input_block': 'Der Tweet darf nicht leer sein.'})
+        return
+
+    length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
     # Validate the inputs
     errors = {}
-    if tweet_text is not None and len(tweet_text) > 280:
-        errors["tweet_input_block"] = f"Der Tweet darf nicht länger als 280 Zeichen sein: {len(tweet_text)}"
+    if tweet_text is not None and length > 280:
+        errors["tweet_input_block"] = f"Der Tweet darf nicht länger als 280 Zeichen sein: {length}"
     if len(errors) > 0:
         ack(response_action="errors", errors=errors)
         return
@@ -160,7 +165,6 @@ def handle_submission(ack, body, client, view, logger):
 
     lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
     message = initial_messages[body['view']['private_metadata']]
-    length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
     message['blocks'][0]['fields'][0 if lang == 'de' else 1]['text'] = f"*{'Deutsch' if lang == 'de' else 'Französisch'} ({length}/280)*"
     message['blocks'][0]['fields'][2 if lang == 'de' else 3]['text'] = tweet_text
     respond = Respond(response_url=body['view']['private_metadata'])
