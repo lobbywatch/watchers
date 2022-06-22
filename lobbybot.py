@@ -165,7 +165,8 @@ def handle_submission(ack, body, client, view, logger):
 
     lang = 'de' if body['view']['callback_id'] == 'tweet_edit_view_de' else 'fr'
     message = initial_messages[body['view']['private_metadata']]
-    message['blocks'][0]['fields'][0 if lang == 'de' else 1]['text'] = f"*{'Deutsch' if lang == 'de' else 'Französisch'} ({length}/280)*"
+    message['blocks'][0]['fields'][0 if lang == 'de' else 1][
+        'text'] = f"*{'Deutsch' if lang == 'de' else 'Französisch'} ({length}/280)*"
     message['blocks'][0]['fields'][2 if lang == 'de' else 3]['text'] = tweet_text
     respond = Respond(response_url=body['view']['private_metadata'])
     respond(replace_original=True, blocks=message['blocks'])
@@ -246,16 +247,20 @@ def tweet_cancel(ack, body, respond, logger):
     ack()
 
     freigabe_id = body['message']['blocks'][1]['block_id']
-    with db_connection() as (tunnel, connection):
-        cursor = connection.cursor()
-        cursor.execute("""
+    tunnel, connection = db_connection()
+    try:
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute("""
                     update freigabe_queue
                     set    status = 'ignoriert',
                            updated_date = now()
                     where  id = %s
-                """, (freigabe_id, ))
-        connection.commit()
-        tunnel.stop()
+                """, (freigabe_id,))
+            connection.commit()
+    finally:
+        if tunnel:
+            tunnel.stop()
 
     body['message']['blocks'].pop()
     del body['message']['blocks'][0]['fields']
