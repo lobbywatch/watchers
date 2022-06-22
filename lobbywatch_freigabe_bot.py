@@ -217,6 +217,24 @@ def post_slack_message(pa, ib, org, row):
                             "type": "plain_text",
                             "text": "Posten"
                         },
+                        "confirm": {
+                            "title": {
+                                "type": "plain_text",
+                                "text": "Bist du sicher?"
+                            },
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": "Sollen die Tweets jetzt gepostet werden?"
+                            },
+                            "confirm": {
+                                "type": "plain_text",
+                                "text": "Ja"
+                            },
+                            "deny": {
+                                "type": "plain_text",
+                                "text": "Nein"
+                            }
+                        },
                         "style": "primary",
                         "value": f"{row['id']}",
                         "action_id": "tweet_post"
@@ -244,6 +262,24 @@ def post_slack_message(pa, ib, org, row):
                         "text": {
                             "type": "plain_text",
                             "text": "Verwerfen"
+                        },
+                        "confirm": {
+                            "title": {
+                                "type": "plain_text",
+                                "text": "Bist du sicher?"
+                            },
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": "Sollen die Tweets verworfen werden?"
+                            },
+                            "confirm": {
+                                "type": "plain_text",
+                                "text": "Ja"
+                            },
+                            "deny": {
+                                "type": "plain_text",
+                                "text": "Nein"
+                            }
                         },
                         "style": "danger",
                         "value": f"{row['id']}",
