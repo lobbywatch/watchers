@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+import time
 
 import requests
 from slack_sdk import WebClient
@@ -44,5 +45,6 @@ class WaybackMachineReporter(reporters.ReporterBase):
                     logger.info(f"Snapshot at: {req.headers['location']}")
                 else:
                     logger.error(f"Failed to create snapshot for {location}: {req.headers}")
+                time.sleep(4)
             except requests.RequestException as e:
                 logger.error(f"Submission failed for {location}: {e=}, {type(e)=}")
