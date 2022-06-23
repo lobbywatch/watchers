@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import mysql.connector
 import paramiko
+import requests
 import tweepy
 from dotenv import dotenv_values
 from slack_bolt import App
@@ -79,6 +80,15 @@ def add_website(text, logger):
             subprocess.run(['bash', '-c', f'git add urls.yaml'])
             subprocess.run(['bash', '-c', f'git commit -m "adding {url.geturl()}"'])
             subprocess.run(['bash', '-c', f'git push'])
+            try:
+                req = requests.head(f"https://web.archive.org/save/{url.geturl()}")
+                if req.ok:
+                    logger.info(f"Snapshot at: {req.headers['location']}")
+                else:
+                    logger.error(f"Failed to create snapshot for {url.geturl()}: {req.headers}")
+            except requests.RequestException:
+                pass
+
     return result
 
 
