@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
 import time
+from datetime import datetime
+from typing import TypedDict
 
 import requests
 from slack_sdk import WebClient
@@ -8,6 +9,14 @@ from webchanges import reporters
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+ConfigReportWaybackMachine = TypedDict(
+    'ConfigReportWaybackMachine',
+    {
+        'enabled': bool,
+        'sleep': int,
+    },
+)
 
 
 class CustomSlackReporter(reporters.TextReporter):
@@ -35,7 +44,10 @@ class WaybackMachineReporter(reporters.ReporterBase):
 
     __kind__ = 'wayback_machine'
 
+    config: ConfigReportWaybackMachine
+
     def submit(self):
+        sleep = self.config['sleep'] if self.config['sleep'] else 0
         for job_state in self.report.get_filtered_job_states(self.job_states):
             location = job_state.job.get_location()
             logger.info(f"Adding snapshot to archive.org for: {location}")
@@ -45,6 +57,7 @@ class WaybackMachineReporter(reporters.ReporterBase):
                     logger.info(f"Snapshot at: {req.headers['location']}")
                 else:
                     logger.error(f"Failed to create snapshot for {location}: {req.headers}")
-                time.sleep(4)
+                if sleep > 0:
+                    time.sleep(sleep)
             except requests.RequestException as e:
                 logger.error(f"Submission failed for {location}: {e=}, {type(e)=}")
