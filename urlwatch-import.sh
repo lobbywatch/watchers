@@ -6,4 +6,4 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
-NO_REPLACE=1 webchanges --urls urls.yaml --cache cache.db --config urlwatch-import.yaml --hooks hooks.py $1
+NO_REPLACE=1 webchanges --urls urls.yaml --cache cache.db --config urlwatch-import.yaml --hooks hooks.py $@
