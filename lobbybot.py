@@ -230,6 +230,7 @@ def tweet_post(ack, body, respond, logger):
             tunnel.stop()
 
     body['message']['blocks'].pop()
+    del body['message']['blocks'][0]['fields']
     body['message']['blocks'].append(
         {
             "type": "divider"
