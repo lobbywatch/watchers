@@ -373,7 +373,7 @@ if __name__ == "__main__":
               and i.status != 'deklariert'
               and i.art != 'mitglied'
               and o.rechtsform not in ('Parlamentarische Gruppe', 'Parlamentarische Freundschaftsgruppe')
-              and least(coalesce(i.von, i.created_date), i.created_date) + interval 60 day >= now()
+              and i.von + interval 60 day >= now()
         ) i on q.objekt_id = i.interessenbindung_id and q.objekt_freigabe_datum = i.freigabe_datum
         where q.objekt_typ = 'interessenbindung'
           and q.status = 'neu'
