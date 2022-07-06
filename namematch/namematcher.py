@@ -207,7 +207,7 @@ class NameMatcher:
 
         r = r.replace('Delphine', 'Délphine').replace('Bellaiche', 'Bellaïche').replace('à', '(?:a|à)').replace('á', '(?:a|á)') \
             .replace('ç', '(?:c|ç)').replace('é', '(?:e|é)').replace('è', '(?:e|è)').replace('ë', '(?:e|ë)') \
-            .replace('ï', '(?:i|ï)').replace('î', '(?:i|î)').replace('ò', '(?:o|ò)').replace('ô', '(?:o|ô)')
+            .replace('ï', '(?:i|ï)').replace('î', '(?:i|î)').replace('ò', '(?:o|ò)').replace('ô', '(?:o|ô)').replace("'", "(?:'|’)?")
         # r = re.sub(r'i?y', '(?:i?y|i)', r)
         # r = re.sub(r'[VW]', '[VW]', r)
         # r = re.sub(r'[vw]', '[vw]', r)
