@@ -370,10 +370,9 @@ if __name__ == "__main__":
             left join partei p on pa.partei_id = p.id
             where i.freigabe_datum is not null
               and i.deklarationstyp = 'deklarationspflichtig'
-              and i.status != 'deklariert'
               and i.art != 'mitglied'
               and o.rechtsform not in ('Parlamentarische Gruppe', 'Parlamentarische Freundschaftsgruppe')
-              and i.von + interval 60 day >= now()
+              and i.von + interval 30 day >= now()
         ) i on q.objekt_id = i.interessenbindung_id and q.objekt_freigabe_datum = i.freigabe_datum
         where q.objekt_typ = 'interessenbindung'
           and q.status = 'neu'
