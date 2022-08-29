@@ -25,9 +25,7 @@ parser.add_argument('--ib', dest='interessenbindung')
 
 URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
 
-Geschlecht = Enum('Geschlecht', 'M W')
-
-Person = NamedTuple('Person', [('geschlecht', Geschlecht)])
+Person = NamedTuple('Person', [('geschlecht', str)])
 Interessenbindung = NamedTuple('Interessenbindung', [('art', str), ('funktion_im_gremium', str), ('deklariert', bool)])
 Organisation = NamedTuple('Organisation', [('rechtsform', str)])
 
@@ -190,7 +188,7 @@ def tweet_text(template, lang, row):
 def post_slack_message(pa: Person, ib: Interessenbindung, org: Organisation, row):
     text_de = tweet_text(templates_decl['de'] if ib.deklariert else templates_undecl['de'], 'de', row)
     length_de = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_de)))
-    text_fr = tweet_text(templates_decl['fr'] if ib.deklariert else templates_undecl['de'], 'fr', row)
+    text_fr = tweet_text(templates_decl['fr'] if ib.deklariert else templates_undecl['fr'], 'fr', row)
     length_fr = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_fr)))
 
     if args.dry_run:
@@ -363,7 +361,7 @@ if __name__ == "__main__":
               + "%parlamentarier_mention%? %parlamentarier_page%",
         'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : "
               + "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. "
-              + "super, vous avez déjà déclaré cela, maintenant vous pourriez encore dévoiler l'indemnisation, "
+              + "Super, vous avez déjà déclaré cela, maintenant vous pourriez encore dévoiler l'indemnisation, "
               + "%parlamentarier_mention%? %parlamentarier_page%"
     }
 
@@ -423,7 +421,7 @@ if __name__ == "__main__":
                 status = 'in_triage'
 
         if status == 'in_triage':
-            pa = Person(geschlecht=Geschlecht.M if row['parlamentarier_geschlecht'] == 'M' else Geschlecht.W)
+            pa = Person(geschlecht=row['parlamentarier_geschlecht'])
             ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'],
                                    deklariert=row['status'] == 'deklariert')
             org = Organisation(rechtsform=row['organisation_rechtsform'])
