@@ -4,7 +4,8 @@
 import argparse
 import os
 import urllib.parse
-from collections import namedtuple
+from enum import Enum
+from typing import NamedTuple
 
 import mysql.connector
 import paramiko
@@ -17,14 +18,18 @@ from sshtunnel import SSHTunnelForwarder
 
 config = {**dotenv_values(".env"), **os.environ}
 
-parser = argparse.ArgumentParser(description='Erstellt für neu freigegebene Interessenbindungen Slack Messages womit Twitter Posts ausgelöst werden können.')
+parser = argparse.ArgumentParser(
+    description='Erstellt für neu freigegebene Interessenbindungen Slack Messages womit Twitter Posts ausgelöst werden können.')
 parser.add_argument('--dry-run', action=argparse.BooleanOptionalAction)
+parser.add_argument('--ib', dest='interessenbindung')
 
 URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
 
-Person = namedtuple('Person', 'geschlecht')
-Interessenbindung = namedtuple('Interessenbindung', 'art funktion_im_gremium')
-Organisation = namedtuple('Organisation', 'rechtsform')
+Geschlecht = Enum('Geschlecht', 'M W')
+
+Person = NamedTuple('Person', [('geschlecht', Geschlecht)])
+Interessenbindung = NamedTuple('Interessenbindung', [('art', str), ('funktion_im_gremium', str), ('deklariert', bool)])
+Organisation = NamedTuple('Organisation', [('rechtsform', str)])
 
 app = App(token=config["SLACK_BOT_TOKEN"])
 
@@ -88,25 +93,35 @@ def lobbywatch_bindungsart(pers, ib, org, lang):
     elif org.rechtsform == 'Stiftung' and ib.art == 'geschaeftsfuehrend' and pers.geschlecht == 'M':
         return translate('Geschäftsleitung')
     # AG
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'F':
+    elif org.rechtsform in (
+            'AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'F':
         return translate('Verwaltungsratspräsidentin')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'M':
+    elif org.rechtsform in (
+            'AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'M':
         return translate('Verwaltungsratspräsident')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'F':
+    elif org.rechtsform in (
+            'AG',
+            'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'F':
         return translate('Verwaltungsratsvizepräsidentin')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'M':
+    elif org.rechtsform in (
+            'AG',
+            'Genossenschaft') and ib.art == 'vorstand' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'M':
         return translate('Verwaltungsratsvizepräsident')
     elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and pers.geschlecht == 'F':
         return translate('Verwaltungsrätin')
     elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'vorstand' and pers.geschlecht == 'M':
         return translate('Verwaltungsrat')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'F':
+    elif org.rechtsform in ('AG',
+                            'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'F':
         return translate('Geschäftsführerin (CEO)')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'M':
+    elif org.rechtsform in ('AG',
+                            'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'praesident' and pers.geschlecht == 'M':
         return translate('Geschäftsführer (CEO)')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'F':
+    elif org.rechtsform in ('AG',
+                            'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'F':
         return translate('Vizegeschäftsführerin')
-    elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'M':
+    elif org.rechtsform in ('AG',
+                            'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and ib.funktion_im_gremium == 'vizepraesident' and pers.geschlecht == 'M':
         return translate('Vizegeschäftsführer')
     elif org.rechtsform in ('AG', 'Genossenschaft') and ib.art == 'geschaeftsfuehrend' and pers.geschlecht == 'F':
         return translate('Geschäftsleitung')
@@ -140,10 +155,12 @@ def lobbywatch_bindungsart(pers, ib, org, lang):
     # Beirat/Patronatskomitee/Expertenkommission/Advisory Board
     elif ib.art == 'beirat':
         return translate('Beirat/Patronatskomitee/Expertenkommission/Advisory Board') + \
-               ('' if ib.funktion_im_gremium is None or ib.funktion_im_gremium in ('', 'mitglied') else ', ' + funktion_im_gremium())
+               ('' if ib.funktion_im_gremium is None or ib.funktion_im_gremium in (
+                   '', 'mitglied') else ', ' + funktion_im_gremium())
     # Else
     else:
-        return art() + ('' if ib.funktion_im_gremium is None or ib.funktion_im_gremium in ('', 'mitglied') else ', ' + funktion_im_gremium())
+        return art() + (
+            '' if ib.funktion_im_gremium is None or ib.funktion_im_gremium in ('', 'mitglied') else ', ' + funktion_im_gremium())
     # TODO add translate() to funktion_im_gremium
     #   return "CONCAT(UCASE(LEFT(interessenbindung.art, 1)), SUBSTRING(interessenbindung.art, 2)),
     #       IF(interessenbindung.funktion_im_gremium IS NULL OR TRIM(interessenbindung.funktion_im_gremium) IN ('', 'mitglied'), '', CONCAT(', ',CONCAT(UCASE(LEFT(interessenbindung.funktion_im_gremium, 1)), SUBSTRING(interessenbindung.funktion_im_gremium, 2))))";
@@ -159,20 +176,21 @@ def tweet_text(template, lang, row):
     text = text.replace('%interessenbindung_funktion%',
                         row[f'interessenbindung_beschreibung_{lang}'] if row[
                             f'interessenbindung_beschreibung_{lang}'] else lobbywatch_bindungsart(pa, ib, org, lang))
-    text = text.replace('%organisation_name%', row[f'organisation_name_{lang}'] if row[f'organisation_name_{lang}'] else row['organisation_name_de'])
+    text = text.replace('%organisation_name%',
+                        row[f'organisation_name_{lang}'] if row[f'organisation_name_{lang}'] else row['organisation_name_de'])
     text = text.replace('%parlamentarier_mention%',
-                              f"@{row['parlamentarier_twitter_name']}" if row['parlamentarier_twitter_name'] else '#' + (
-                                          row['parlamentarier_vorname'] + row['parlamentarier_nachname']).translate(
-                                  str.maketrans('', '', ' \'-')))
+                        f"@{row['parlamentarier_twitter_name']}" if row['parlamentarier_twitter_name'] else '#' + (
+                                row['parlamentarier_vorname'] + row['parlamentarier_nachname']).translate(
+                            str.maketrans('', '', ' \'-')))
     text = text.replace('%parlamentarier_page%',
-                              f"https://lobbywatch.ch/{lang}/daten/parlamentarier/{row['parlamentarier_id']}/{urllib.parse.quote(row['parlamentarier_vorname'] + ' ' + row['parlamentarier_nachname'])}")
+                        f"https://lobbywatch.ch/{lang}/daten/parlamentarier/{row['parlamentarier_id']}/{urllib.parse.quote(row['parlamentarier_vorname'] + ' ' + row['parlamentarier_nachname'])}")
     return text
 
 
-def post_slack_message(pa, ib, org, row):
-    text_de = tweet_text(templates['de'], 'de', row)
+def post_slack_message(pa: Person, ib: Interessenbindung, org: Organisation, row):
+    text_de = tweet_text(templates_decl['de'] if ib.deklariert else templates_undecl['de'], 'de', row)
     length_de = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_de)))
-    text_fr = tweet_text(templates['fr'], 'fr', row)
+    text_fr = tweet_text(templates_decl['fr'] if ib.deklariert else templates_undecl['de'], 'fr', row)
     length_fr = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_fr)))
 
     if args.dry_run:
@@ -330,12 +348,24 @@ if __name__ == "__main__":
     #     print('last message was posted less than one hour ago')
     #     sys.exit()
 
-    templates = {'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat ein neues Lobbymandat: " \
-                  + "%interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, " \
-                  + "%parlamentarier_mention%? %parlamentarier_page%",
-                 'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : " \
-                  "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. L'avez-vous déjà signalé aux Services du Parlement " \
-                  "%parlamentarier_mention%? %parlamentarier_page%"}
+    templates_undecl = {
+        'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat ein neues Lobbymandat: "
+              + "%interessenbindung_funktion% bei %organisation_name%. Haben Sie das schon deklariert, "
+              + "%parlamentarier_mention%? %parlamentarier_page%",
+        'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : "
+              + "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. L'avez-vous déjà signalé aux Services du Parlement "
+              + "%parlamentarier_mention%? %parlamentarier_page%"
+    }
+    templates_decl = {
+        'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat ein neues Lobbymandat: "
+              + "%interessenbindung_funktion% bei %organisation_name%. "
+              + "Super, haben Sie das bereits deklariert, jetzt könnten Sie noch die Entschädigung offen legen, "
+              + "%parlamentarier_mention%? %parlamentarier_page%",
+        'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : "
+              + "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. "
+              + "super, vous avez déjà déclaré cela, maintenant vous pourriez encore dévoiler l'indemnisation, "
+              + "%parlamentarier_mention%? %parlamentarier_page%"
+    }
 
     tunnel, connection = db_connection()
     cursor = connection.cursor()
@@ -348,6 +378,7 @@ if __name__ == "__main__":
                    i.freigabe_datum,
                    i.funktion_im_gremium interessenbindung_funktion,
                    i.art interessenbindung_art,
+                   i.status status,
                    i.beschreibung interessenbindung_beschreibung_de,
                    i.beschreibung_fr interessenbindung_beschreibung_fr,
                    pa.id parlamentarier_id,
@@ -386,13 +417,15 @@ if __name__ == "__main__":
         if row['interessenbindung_id'] is None:
             status = 'ignoriert'
         else:
-            response = requests.get(f'https://cms.lobbywatch.ch/de/data/interface/v1/json/table/interessenbindung/flat/id/{row["interessenbindung_id"]}')
+            response = requests.get(
+                f'https://cms.lobbywatch.ch/de/data/interface/v1/json/table/interessenbindung/flat/id/{row["interessenbindung_id"]}')
             if response.status_code == 200:
                 status = 'in_triage'
 
         if status == 'in_triage':
-            pa = Person(geschlecht=row['parlamentarier_geschlecht'])
-            ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'])
+            pa = Person(geschlecht=Geschlecht.M if row['parlamentarier_geschlecht'] == 'M' else Geschlecht.W)
+            ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'],
+                                   deklariert=row['status'] == 'deklariert')
             org = Organisation(rechtsform=row['organisation_rechtsform'])
 
             post_slack_message(pa, ib, org, row)
