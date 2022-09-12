@@ -417,7 +417,7 @@ if __name__ == "__main__":
         else:
             response = requests.get(
                 f'https://cms.lobbywatch.ch/de/data/interface/v1/json/table/interessenbindung/flat/id/{row["interessenbindung_id"]}')
-            if response.status_code == 200 and response.json()['value']:
+            if response.status_code == 200 and response.json()['success']:
                 status = 'in_triage'
 
         if status == 'in_triage':
