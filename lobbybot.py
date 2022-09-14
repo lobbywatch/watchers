@@ -142,6 +142,7 @@ def tweet_edit(ack, body, respond, logger):
                     "type": "input",
                     "block_id": "tweet_input_block",
                     "label": {"type": "plain_text", "text": "Tweet Text"},
+                    "optional": True,
                     "element": {
                         "type": "plain_text_input",
                         "action_id": "tweet_text",
