@@ -158,9 +158,6 @@ def tweet_edit(ack, body, respond, logger):
 @app.view(re.compile("tweet_edit_view_(de|fr)"))
 def handle_submission(ack, body, client, view, logger):
     tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
-    if tweet_text is None or len(tweet_text) == 0:
-        ack(response_action="errors", errors={'tweet_input_block': 'Der Tweet darf nicht leer sein.'})
-        return
 
     length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
     # Validate the inputs
@@ -191,24 +188,34 @@ def tweet_post(ack, body, respond, logger):
     tweet_de_id = None
     tweet_fr_id = None
 
-    try:
-        response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][2]['text'])
-        if response and len(response.errors) > 0:
-            errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {response.errors}"
-        else:
-            tweet_de_id = response.data['id']
-        response = tweepy_client.create_tweet(text=body['message']['blocks'][0]['fields'][3]['text'])
-        if response and len(response.errors) > 0:
-            errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {response.errors}"
-        else:
-            tweet_fr_id = response.data['id']
-    except tweepy.errors.TweepyException as e:
-        errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {e}"
+    text_de = body['message']['blocks'][0]['fields'][2]['text']
+    text_fr = body['message']['blocks'][0]['fields'][3]['text']
+
+    if text_de and len(text_de) > 280:
+        errors["tweet_block"] = f"Der Deutsche Tweet ist zu lang!"
+    elif text_fr and len(text_fr) > 280:
+        errors["tweet_block"] = f"Der Französische Tweet ist zu lang!"
+    else:
+        try:
+            if text_de and len(text_de) > 0:
+                response = tweepy_client.create_tweet(text=text_de)
+                if response and len(response.errors) > 0:
+                    errors["tweet_block"] = f"Der Deutsche Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
+                else:
+                    tweet_de_id = response.data['id']
+            if text_fr and len(text_fr) > 0:
+                response = tweepy_client.create_tweet(text=text_fr)
+                if response and len(response.errors) > 0:
+                    errors["tweet_block"] = f"Der Französische Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
+                else:
+                    tweet_fr_id = response.data['id']
+        except tweepy.errors.TweepyException as e:
+            errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {e}"
 
     if len(errors) > 0:
         ack(response_action="errors", errors=errors)
         return
-    elif tweet_de_id is None or tweet_fr_id is None:
+    elif tweet_de_id is None and tweet_fr_id is None:
         return
 
     freigabe_id = body['message']['blocks'][1]['block_id']
@@ -236,12 +243,21 @@ def tweet_post(ack, body, respond, logger):
             "type": "divider"
         }
     )
+
+    status_text = f"Die Tweets wurden soeben gepostet: "
+    if tweet_de_id:
+        status_text += "https://twitter.com/Lobbywatch_CH/status/{tweet_de_id}"
+        if tweet_fr_id:
+            status_text += " und "
+    if tweet_fr_id:
+        status_text += "https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}"
+
     body['message']['blocks'].append(
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"Die Tweets wurden soeben gepostet: https://twitter.com/Lobbywatch_CH/status/{tweet_de_id} und https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}"
+                "text": status_text
             },
             "accessory": {
                 "type": "image",
