@@ -162,7 +162,7 @@ def handle_submission(ack, body, client, view, logger):
     tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
     tweet_text = tweet_text if tweet_text else ' '
 
-    length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
+    length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text.strip()))
     # Validate the inputs
     errors = {}
     if tweet_text is not None and length > 280:
@@ -200,13 +200,13 @@ def tweet_post(ack, body, respond, logger):
         errors["tweet_block"] = f"Der Französische Tweet ist zu lang!"
     else:
         try:
-            if text_de and len(text_de) > 0 and text_de.lower().strip() != 'leer':
+            if text_de and len(text_de.strip()) > 0 and text_de.lower().strip() != 'leer':
                 response = tweepy_client.create_tweet(text=text_de)
                 if response and len(response.errors) > 0:
                     errors["tweet_block"] = f"Der Deutsche Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
                 else:
                     tweet_de_id = response.data['id']
-            if text_fr and len(text_fr) > 0 and text_fr.lower().strip() != 'leer':
+            if text_fr and len(text_fr.strip()) > 0 and text_fr.lower().strip() != 'leer':
                 response = tweepy_client.create_tweet(text=text_fr)
                 if response and len(response.errors) > 0:
                     errors["tweet_block"] = f"Der Französische Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
