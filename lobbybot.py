@@ -158,8 +158,9 @@ def tweet_edit(ack, body, respond, logger):
 
 @app.view(re.compile("tweet_edit_view_(de|fr)"))
 def handle_submission(ack, body, client, view, logger):
+    logger.debug(body)
     tweet_text = view["state"]["values"]["tweet_input_block"]["tweet_text"]['value']
-    tweet_text = tweet_text if tweet_text else ''
+    tweet_text = tweet_text if tweet_text else ' '
 
     length = len(re.sub(URL_PATTERN, '12345678901234567890123', tweet_text))
     # Validate the inputs
