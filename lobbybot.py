@@ -198,13 +198,13 @@ def tweet_post(ack, body, respond, logger):
         errors["tweet_block"] = f"Der Französische Tweet ist zu lang!"
     else:
         try:
-            if text_de and len(text_de) > 0:
+            if text_de and len(text_de) > 0 and text_de.lower().strip() != 'leer':
                 response = tweepy_client.create_tweet(text=text_de)
                 if response and len(response.errors) > 0:
                     errors["tweet_block"] = f"Der Deutsche Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
                 else:
                     tweet_de_id = response.data['id']
-            if text_fr and len(text_fr) > 0:
+            if text_fr and len(text_fr) > 0 and text_fr.lower().strip() != 'leer':
                 response = tweepy_client.create_tweet(text=text_fr)
                 if response and len(response.errors) > 0:
                     errors["tweet_block"] = f"Der Französische Tweet konnte nicht erfolgreich gepostet werden: {response.errors}"
