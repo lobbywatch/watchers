@@ -249,11 +249,12 @@ def tweet_post(ack, body, respond, logger):
 
     status_text = f"Die Tweets wurden soeben gepostet: "
     if tweet_de_id:
-        status_text += "https://twitter.com/Lobbywatch_CH/status/{tweet_de_id}"
+        status_text += f"<https://twitter.com/Lobbywatch_CH/status/{tweet_de_id}|Deutsch>"
         if tweet_fr_id:
             status_text += " und "
     if tweet_fr_id:
-        status_text += "https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}"
+        status_text += f"<https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}|Französisch>"
+    status_text += f" (Visum <@{body['user_id']}>)."
 
     body['message']['blocks'].append(
         {
@@ -304,7 +305,7 @@ def tweet_cancel(ack, body, respond, logger):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten."
+                "text": f"Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten (Visum <@{body['user_id']}>)."
             },
             "accessory": {
                 "type": "image",
