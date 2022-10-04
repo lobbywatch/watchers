@@ -257,7 +257,7 @@ def tweet_post(ack, body, respond, logger):
             status_text += " und "
     if tweet_fr_id:
         status_text += f"<https://twitter.com/Lobbywatch_CH/status/{tweet_fr_id}|Französisch>"
-    status_text += f" (Visum <@{body['user_id']}>)."
+    status_text += f" (Visum <@{body['user']['id']}>)."
 
     body['message']['blocks'].append(
         {
