@@ -185,6 +185,7 @@ def handle_submission(ack, body, client, view, logger):
 
 @app.action("tweet_post")
 def tweet_post(ack, body, respond, logger):
+    logger.debug(body)
     ack()
 
     errors = {}
@@ -216,6 +217,7 @@ def tweet_post(ack, body, respond, logger):
             errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {e}"
 
     if len(errors) > 0:
+        logger.debug(errors, body)
         ack(response_action="errors", errors=errors)
         return
     elif tweet_de_id is None and tweet_fr_id is None:
