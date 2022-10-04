@@ -186,7 +186,6 @@ def handle_submission(ack, body, client, view, logger):
 @app.action("tweet_post")
 def tweet_post(ack, body, respond, logger):
     logger.debug(body)
-    ack()
 
     errors = {}
     tweet_de_id = None
@@ -195,9 +194,9 @@ def tweet_post(ack, body, respond, logger):
     text_de = body['message']['blocks'][0]['fields'][2]['text']
     text_fr = body['message']['blocks'][0]['fields'][3]['text']
 
-    if text_de and len(text_de) > 280:
+    if text_de and len(re.sub(URL_PATTERN, '12345678901234567890123', text_de)) > 280:
         errors["tweet_block"] = f"Der Deutsche Tweet ist zu lang!"
-    elif text_fr and len(text_fr) > 280:
+    elif text_fr and len(re.sub(URL_PATTERN, '12345678901234567890123', text_fr)) > 280:
         errors["tweet_block"] = f"Der Französische Tweet ist zu lang!"
     else:
         try:
@@ -217,10 +216,12 @@ def tweet_post(ack, body, respond, logger):
             errors["tweet_block"] = f"Die Tweets konnten nicht erfolgreich gepostet werden: {e}"
 
     if len(errors) > 0:
-        logger.debug(errors, body)
+        logger.error(errors)
         ack(response_action="errors", errors=errors)
         return
-    elif tweet_de_id is None and tweet_fr_id is None:
+
+    ack()
+    if tweet_de_id is None and tweet_fr_id is None:
         return
 
     freigabe_id = body['message']['blocks'][1]['block_id']
