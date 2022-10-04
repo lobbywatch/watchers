@@ -308,7 +308,7 @@ def tweet_cancel(ack, body, respond, logger):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten (Visum <@{body['user_id']}>)."
+                "text": f"Für diese Freigabe wurde entschieden, _keinen_ Tweet zu posten (Visum <@{body['user']['id']}>)."
             },
             "accessory": {
                 "type": "image",
