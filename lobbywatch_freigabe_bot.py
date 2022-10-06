@@ -21,7 +21,7 @@ config = {**dotenv_values(".env"), **os.environ}
 parser = argparse.ArgumentParser(
     description='Erstellt für neu freigegebene Interessenbindungen Slack Messages womit Twitter Posts ausgelöst werden können.')
 parser.add_argument('--dry-run', action=argparse.BooleanOptionalAction)
-parser.add_argument('--ib', dest='interessenbindung')
+parser.add_argument('--ib', dest='interessenbindung_id')
 
 URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
 
@@ -427,10 +427,10 @@ if __name__ == "__main__":
               and i.von + interval 30 day >= now()
         ) i on q.objekt_id = i.interessenbindung_id and q.objekt_freigabe_datum = i.freigabe_datum
         where q.objekt_typ = 'interessenbindung'
-          and q.status = 'neu'
+          and (q.status = 'neu' or q.objekt_id = %(interessenbindung_id)s)
         order by q.objekt_freigabe_datum desc, q.updated_date desc, q.objekt_id desc
         # limit 100
-    """)
+    """, {'interessenbindung_id': args.interessenbindung_id})
 
     fields = [md[0] for md in cursor.description]
     for row in [dict(zip(fields, row)) for row in cursor.fetchall()]:
