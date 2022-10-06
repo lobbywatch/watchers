@@ -1,6 +1,12 @@
 import unittest
 from namematch import namematcher
 
+format_map = {
+    'std': namematcher.MatchFormat.SHAB_STD,
+    'vd': namematcher.MatchFormat.SHAB_VD,
+    'fr': namematcher.MatchFormat.SHAB_FR,
+}
+
 
 class TestNameMatcher(unittest.TestCase):
     def test_empty(self):
@@ -57,17 +63,26 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'René', None, None, 'Jenny', ('Tentlingen',))
         self.assertMatch(name, "Jenny René, de Tentlingen", format='vd')
 
+    def test_humbel_1005577565(self):
+        name = namematcher.Name(1, 'Ruth', ('Cornelia',), None, 'Humbel', None)
+        self.assertMatch(name, "Humbel N\u00e4f Ruth", format='vd')
+
+    def test_humbel_1005577086(self):
+        name = namematcher.Name(1, 'Ruth', ('Cornelia',), None, 'Humbel', None)
+        self.assertNoMatch(name, "Humbel Näf Ruth Cornelia", format='fr')
+        self.assertMatch(name, "Humbel Näf Ruth Cornelia", format='vd')
+
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
 
     def assertNoMatch(self, name, str, format='std'):
         matcher = namematcher.NameMatcher([name])
-        matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format)
+        matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format_map[format])
         self.assertEqual(0, len(matches))
 
     def assertMatch(self, name, str, end=None, format='std'):
         matcher = namematcher.NameMatcher([name])
-        matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format)
+        matches = matcher.match_content(str.encode(encoding='utf-8'), label=None, offset=0, format=format_map[format])
         self.assertEqual(1, len(matches))
         self.assertEqual(name, matches[0].name)
         self.assertEqual(0, matches[0].start)
