@@ -187,7 +187,7 @@ def tweet_text(template, lang, row):
 
 def post_slack_message(pa: Person, ib: Interessenbindung, org: Organisation, row):
     if ib.deklariert:
-        templates = templates_decl if ib.verguetung is None else templates_decl_complete
+        templates = templates_decl if ib.verguetung is None or ib.verguetung == 1 else templates_decl_complete
     else:
         templates = templates_undecl
 
