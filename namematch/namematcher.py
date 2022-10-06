@@ -181,9 +181,9 @@ class NameMatcher:
         if format == MatchFormat.SHAB_STD:
             result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)?, (?:[^.,;\\- ]+\\. ?)*\\s?' + firstname + '(?=[;, ]|$))'
         elif format == MatchFormat.SHAB_VD:
-            result += '(?:' + lastname + ' (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]|$))'
+            result += '(?:' + lastname + '(?:[- ][^.,;\\- ]+)? (?:[^.,;\\- ]+\\. ?)*' + firstname + '(?=[;, ]|$))'
         elif format == MatchFormat.SHAB_FR:
-            result += '(?:' + firstname + '(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
+            result += '(?:' + firstname + '(?:[- ][^.,;\\- ]+)?(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         elif format == MatchFormat.NAME_ONLY:
             result += '(?:' + firstname + '(?: |\xc2\xa0)+' + lastname + '|' + lastname + ',?(?: |\xc2\xa0)+' + firstname + ')'
         else:
