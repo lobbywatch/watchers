@@ -443,7 +443,7 @@ if __name__ == "__main__":
             if response.status_code == 200 and response.json()['success']:
                 status = 'in_triage'
 
-        if status == 'in_triage':
+        if status == 'in_triage' or args.dry_run:
             pa = Person(geschlecht=row['parlamentarier_geschlecht'])
             ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'],
                                    deklariert=row['status'] == 'deklariert', verguetung=row['interessenbindung_verguetung'])
