@@ -384,7 +384,7 @@ if __name__ == "__main__":
     cursor.execute("""
         select q.id, i.*
         from freigabe_queue q
-        left join (
+        join (
             select i.id interessenbindung_id,
                    i.freigabe_datum,
                    i.funktion_im_gremium interessenbindung_funktion,
