@@ -26,7 +26,7 @@ parser.add_argument('--ib', dest='interessenbindung')
 URL_PATTERN = r'[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*'
 
 Person = NamedTuple('Person', [('geschlecht', str)])
-Interessenbindung = NamedTuple('Interessenbindung', [('art', str), ('funktion_im_gremium', str), ('deklariert', bool)])
+Interessenbindung = NamedTuple('Interessenbindung', [('art', str), ('funktion_im_gremium', str), ('deklariert', bool), ('verguetung', int)])
 Organisation = NamedTuple('Organisation', [('rechtsform', str)])
 
 app = App(token=config["SLACK_BOT_TOKEN"])
@@ -186,9 +186,14 @@ def tweet_text(template, lang, row):
 
 
 def post_slack_message(pa: Person, ib: Interessenbindung, org: Organisation, row):
-    text_de = tweet_text(templates_decl['de'] if ib.deklariert else templates_undecl['de'], 'de', row)
+    if ib.deklariert:
+        templates = templates_decl if ib.verguetung is None else templates_decl_complete
+    else:
+        templates = templates_undecl
+
+    text_de = tweet_text(templates['de'], 'de', row)
     length_de = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_de)))
-    text_fr = tweet_text(templates_decl['fr'] if ib.deklariert else templates_undecl['fr'], 'fr', row)
+    text_fr = tweet_text(templates['fr'], 'fr', row)
     length_fr = len(unicodedata.normalize('NFC', re.sub(URL_PATTERN, '12345678901234567890123', text_fr)))
 
     if args.dry_run:
@@ -364,6 +369,14 @@ if __name__ == "__main__":
               + "Super, vous avez déjà déclaré cela, maintenant vous pourriez encore dévoiler l'indemnisation, "
               + "%parlamentarier_mention%? %parlamentarier_page%"
     }
+    templates_decl_complete = {
+        'de': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) hat ein neues Lobbymandat: "
+              + "%interessenbindung_funktion% bei %organisation_name%. "
+              + "Super, haben Sie das bereits deklariert, %parlamentarier_mention%! %parlamentarier_page%",
+        'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : "
+              + "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. "
+              + "Super d'avoid déclaré cela, %parlamentarier_mention%? %parlamentarier_page%"
+    }
 
     tunnel, connection = db_connection()
     cursor = connection.cursor()
@@ -376,6 +389,7 @@ if __name__ == "__main__":
                    i.freigabe_datum,
                    i.funktion_im_gremium interessenbindung_funktion,
                    i.art interessenbindung_art,
+                   ij.verguetung interessenbindung_verguetung,
                    i.status status,
                    i.beschreibung interessenbindung_beschreibung_de,
                    i.beschreibung_fr interessenbindung_beschreibung_fr,
@@ -397,6 +411,15 @@ if __name__ == "__main__":
             join parlamentarier pa on i.parlamentarier_id = pa.id
             join kanton k on pa.kanton_id = k.id
             left join partei p on pa.partei_id = p.id
+            left join (
+                    select *
+                    from interessenbindung_jahr
+                    where id in (
+                        select max(id)
+                        from interessenbindung_jahr
+                        group by interessenbindung_id
+                    )
+            ) ij on i.id = ij.interessenbindung_id
             where i.freigabe_datum is not null
               and i.deklarationstyp = 'deklarationspflichtig'
               and i.art != 'mitglied'
@@ -423,7 +446,7 @@ if __name__ == "__main__":
         if status == 'in_triage':
             pa = Person(geschlecht=row['parlamentarier_geschlecht'])
             ib = Interessenbindung(art=row['interessenbindung_art'], funktion_im_gremium=row['interessenbindung_funktion'],
-                                   deklariert=row['status'] == 'deklariert')
+                                   deklariert=row['status'] == 'deklariert', verguetung=row['interessenbindung_verguetung'])
             org = Organisation(rechtsform=row['organisation_rechtsform'])
 
             post_slack_message(pa, ib, org, row)
