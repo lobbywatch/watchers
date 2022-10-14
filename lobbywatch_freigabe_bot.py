@@ -33,21 +33,21 @@ app = App(token=config["SLACK_BOT_TOKEN"])
 
 
 def lobbywatch_bindungsart(pers, ib, org, lang):
-    def translate(key):
+    def translate(key, location='_lobbywatch_bindungsart()'):
         cursor.execute('''
             select case when t.translation = '' then s.source else t.translation end
             from translation_source s
             join translation_target t on t.translation_source_id = s.id
             where binary source = %(key)s
               and t.lang = %(lang)s
-              and s.location = '_lobbywatch_bindungsart()'
+              and s.location = %(location)s
               and s.context = ''
-        ''', {'key': key, 'lang': lang})
+        ''', {'key': key, 'lang': lang, 'location': location})
         return cursor.fetchone()[0]
 
     def art():
         if ib.art in ('mitglied', 'geschaeftsfuehrend', 'vorstand', 'taetig', 'beirat', 'finanziell', 'gesellschafter'):
-            return translate(ib.art)
+            return translate(ib.art, location='Interessenbindung')
         else:
             return ib.art.capitalize()
 
