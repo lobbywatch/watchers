@@ -11,5 +11,3 @@ join zutrittsberechtigung z on person.id = z.person_id
 where now() between coalesce(z.von, now()) and coalesce(z.bis, now())
 order by person.id
 ;
-
-select length(trim(' a '))

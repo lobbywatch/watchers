@@ -1,5 +1,5 @@
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -20,10 +20,10 @@ class MatchFormat(Enum):
 class Name:
     id: Any
     first: str
-    middle: tuple[str, ...]
+    middle: tuple[str, ...] = field(compare=False)
     nick: str
     last: str
-    citizenships: tuple[str, ...]
+    citizenships: tuple[str, ...] = field(compare=False)
 
 
 @dataclass(frozen=True)
@@ -48,16 +48,14 @@ second_lastname_re = re.compile('[- ](.*)')
 
 
 class NameMatcher:
-    def __init__(self, names: list[Name]):
+    def __init__(self, names: list[Name], formats: list[MatchFormat] = None):
         self._names_idx = {}
         for idx, n in enumerate(names):
             self._names_idx[idx] = n
             self._names_idx[n] = idx
-        self._regex = {MatchFormat.SHAB_STD: self.__json_to_regex(names, format=MatchFormat.SHAB_STD),
-                       MatchFormat.SHAB_VD:  self.__json_to_regex(names, format=MatchFormat.SHAB_VD),
-                       MatchFormat.SHAB_FR:  self.__json_to_regex(names, format=MatchFormat.SHAB_FR),
-                       MatchFormat.NAME_ONLY:  self.__json_to_regex(names, format=MatchFormat.NAME_ONLY),
-                       }
+        self._regex = {}
+        for f in (formats if formats else [MatchFormat.SHAB_STD, MatchFormat.SHAB_VD, MatchFormat.SHAB_FR, MatchFormat.NAME_ONLY]):
+            self._regex[f] = self.__json_to_regex(names, format=f)
 
     def match(self, message, format):
         res = []
@@ -143,7 +141,10 @@ class NameMatcher:
         result = '(?P<_' + str(self._names_idx[n]) + '>'
 
         lastname = self.__last_name_pattern(n.last)
-        firstname = n.first + '(?: ' + ' '.join(n.middle) + ')?' if n.middle else n.first
+        if format == MatchFormat.NAME_ONLY:
+            firstname = n.first + '(?: ' + ' '.join(n.middle) + '| ' + ' '.join(map(lambda s: s[0].upper() + '\\.', n.middle)) + ')?' if n.middle else n.first
+        else:
+            firstname = n.first + '(?: ' + ' '.join(n.middle) + ')?' if n.middle else n.first
         buergerorte = list(map(lambda o: (o.strip() if o.find('(') == -1 else o[0:o.find('(')]).strip(), n.citizenships)) if n.citizenships else []
         if 'Zürich' in buergerorte:
             buergerorte.append('Zurich')
