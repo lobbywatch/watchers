@@ -1,8 +1,8 @@
 select json_object(
    'id', person.id,
    'first', vorname,
-   'middle', zweiter_vorname,
-   'nick', vorname_kurz,
+   'middle', case zweiter_vorname when '' then null else zweiter_vorname end,
+   'nick', case vorname_kurz when '' then null else vorname_kurz end,
    'last', nachname,
    'citizenships', cast(concat('["', replace(buergerorte, ';', '","'), '"]') as json)
 ) json
