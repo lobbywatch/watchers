@@ -16,7 +16,7 @@ with open('parliamentarians.ndjson', 'r', encoding='utf-8') as f:
 lobby_names = []
 with open('lobbyists.ndjson', 'r', encoding='utf-8') as f:
     for line in f:
-        parl_names.append(json.loads(line, object_hook=lambda d: Name(id=(PersonType.LOBBYIST, d['id']), first=d['first'],
+        lobby_names.append(json.loads(line, object_hook=lambda d: Name(id=(PersonType.LOBBYIST, d['id']), first=d['first'],
                                                                       middle=tuple(d['middle'].split(' ')) if d['middle'] else None, nick=d['nick'], last=d['last'],
                                                                       citizenships=None)))
 
