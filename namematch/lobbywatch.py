@@ -8,7 +8,7 @@ class NameSet(Enum):
 
 
 class PersonType(Enum):
-    PARLIAMENTARIAN = '🙋️'
+    PARLIAMENTARIAN = '\U0001F64B'
     LOBBYIST = '👻'
     OTHER = '👑'
 
