@@ -84,6 +84,11 @@ class TestNameMatcher(unittest.TestCase):
         self.assertFullMatch(name, "Thomas Johannes Grichting", format='no')
         self.assertFullMatch(name, "Thomas J. Grichting", format='no')
 
+    def test_stueckelberger_name_only(self):
+        name = namematcher.Name(1, 'Ulrich', None, 'Ueli', 'Stückelberger', None)
+        self.assertFullMatch(name, "Ulrich Stückelberger", format='no')
+        self.assertFullMatch(name, "Ueli Stückelberger", format='no')
+
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
 
