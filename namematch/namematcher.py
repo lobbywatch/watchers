@@ -188,7 +188,7 @@ class NameMatcher:
         elif format == MatchFormat.SHAB_FR:
             result += '(?:' + firstname + '(?:[- ][^.,;\\- ]+)?(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         elif format == MatchFormat.NAME_ONLY:
-            result += '(?:' + firstname + '(?:\\s|\xc2\xa0)*' + lastname + '|' + lastname + ',?(?:\\s|\xc2\xa0)*' + firstname + ')'
+            result += '(?:' + firstname + '\\s*' + lastname + '|' + lastname + ',?\\s*' + firstname + ')'
         else:
             raise Exception(f'Unknown format: {format}')
 
