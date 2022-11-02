@@ -12,7 +12,7 @@ format_map = {
 class TestNameMatcher(unittest.TestCase):
     def test_empty(self):
         matcher = namematcher.NameMatcher([])
-        matches = matcher.match(b'foo')
+        matches = matcher.match(b'foo', format=namematcher.MatchFormat.SHAB_STD)
         self.assertEqual([], matches)
 
     def test_kope_01(self):
@@ -77,6 +77,12 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'Priska', None, None, 'Wismer-Felder', None)
         self.assertFullMatch(name, "Priska Wismer-Felder", format='no')
         self.assertFullMatch(name, "Priska Wismer", format='no')
+
+    def test_grichting_name_only(self):
+        name = namematcher.Name(1, 'Thomas', ('Johannes',), None, 'Grichting', None)
+        self.assertFullMatch(name, "Thomas Grichting", format='no')
+        self.assertFullMatch(name, "Thomas Johannes Grichting", format='no')
+        self.assertFullMatch(name, "Thomas J. Grichting", format='no')
 
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
