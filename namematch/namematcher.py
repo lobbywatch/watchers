@@ -218,7 +218,7 @@ class NameMatcher:
         # r = re.sub(r'(?:ts?)?ch', '(?:ts?)?ch', r)
         # if format == MatchFormat.FIRST_LAST_ONLY:
         #     print(r)
-        return re.compile(r.encode('utf-8'))
+        return re.compile(r.encode('utf-8'), re.IGNORECASE) if format == MatchFormat.NAME_ONLY else re.compile(r.encode('utf-8'))
 
     def __repr__(self):
         return str(self._names_idx)
