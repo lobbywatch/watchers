@@ -91,6 +91,12 @@ class TestNameMatcher(unittest.TestCase):
         self.assertFullMatch(name, "Stückelberger Ulrich", format='no')
         self.assertFullMatch(name, "Ueli Stückelberger", format='no')
 
+    def test_fehlmann_name_only(self):
+        name = namematcher.Name(1, 'Laurence', None, None, 'Fehlmann Rielle', None)
+        self.assertFullMatch(name, "Laurence Fehlmann Rielle", format='no')
+        self.assertFullMatch(name, "Laurence FEHLMANN", format='no')
+        self.assertFullMatch(name, "Laurence FEHLMANN RIELLE", format='no')
+
     def assertFullMatch(self, name, str, format='std'):
         str = str.replace('\xc2\xa0', ' ').replace(' ', ' ')
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
