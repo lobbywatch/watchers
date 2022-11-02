@@ -23,7 +23,7 @@ with open('lobbyists.ndjson', 'r', encoding='utf-8') as f:
 parl_matcher = NameMatcher(parl_names, formats=[MatchFormat.NAME_ONLY])
 lobby_matcher = NameMatcher(lobby_names, formats=[MatchFormat.NAME_ONLY])
 
-stdin = sys.stdin.read()
+stdin = sys.stdin.read().replace('\xc2\xa0', ' ').replace(' ', ' ')
 matches = parl_matcher.match_content(stdin.encode(encoding='utf-8'), label=None, offset=0, format=MatchFormat.NAME_ONLY)
 matches += lobby_matcher.match_content(stdin.encode(encoding='utf-8'), label=None, offset=0, format=MatchFormat.NAME_ONLY)
 matches.sort(key=lambda m: m.start)

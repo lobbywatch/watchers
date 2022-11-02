@@ -87,9 +87,12 @@ class TestNameMatcher(unittest.TestCase):
     def test_stueckelberger_name_only(self):
         name = namematcher.Name(1, 'Ulrich', None, 'Ueli', 'Stückelberger', None)
         self.assertFullMatch(name, "Ulrich Stückelberger", format='no')
+        self.assertFullMatch(name, "Stückelberger\xc2\xa0Ulrich", format='no')
+        self.assertFullMatch(name, "Stückelberger Ulrich", format='no')
         self.assertFullMatch(name, "Ueli Stückelberger", format='no')
 
     def assertFullMatch(self, name, str, format='std'):
+        str = str.replace('\xc2\xa0', ' ').replace(' ', ' ')
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
 
     def assertNoMatch(self, name, str, format='std'):
