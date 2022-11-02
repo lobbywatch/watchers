@@ -49,6 +49,8 @@ class WaybackMachineReporter(reporters.ReporterBase):
     def submit(self):
         sleep = self.config['sleep'] if self.config['sleep'] else 0
         for job_state in self.report.get_filtered_job_states(self.job_states):
+            if job_state.exception:
+                continue
             location = job_state.job.get_location()
             logger.info(f"Adding snapshot to archive.org for: {location}")
             try:

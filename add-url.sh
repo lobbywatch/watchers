@@ -8,7 +8,7 @@ envsubst < urls.yaml.tmpl > urls-test.yaml
 
 if grep "$1" urls.yaml > /dev/null; then
   echo "URL already added: $1"
-  ./urlwatch-test.sh
+  ./urlwatch-test-list.sh
 else
   echo "Adding $NAME: $URL"
   ./urlwatch-test.sh && cat urls-test.yaml >> urls.yaml
