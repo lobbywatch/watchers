@@ -5,6 +5,7 @@ format_map = {
     'std': namematcher.MatchFormat.SHAB_STD,
     'vd': namematcher.MatchFormat.SHAB_VD,
     'fr': namematcher.MatchFormat.SHAB_FR,
+    'no': namematcher.MatchFormat.NAME_ONLY,
 }
 
 
@@ -71,6 +72,11 @@ class TestNameMatcher(unittest.TestCase):
         name = namematcher.Name(1, 'Ruth', ('Cornelia',), None, 'Humbel', None)
         self.assertNoMatch(name, "Humbel Näf Ruth Cornelia", format='fr')
         self.assertMatch(name, "Humbel Näf Ruth Cornelia", format='vd')
+
+    def test_wismer_name_only(self):
+        name = namematcher.Name(1, 'Priska', None, None, 'Wismer-Felder', None)
+        self.assertFullMatch(name, "Priska Wismer-Felder", format='no')
+        self.assertFullMatch(name, "Priska Wismer", format='no')
 
     def assertFullMatch(self, name, str, format='std'):
         self.assertMatch(name, str, end=len(str.encode('utf-8')), format=format)
