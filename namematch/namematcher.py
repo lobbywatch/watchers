@@ -135,14 +135,14 @@ class NameMatcher:
     def __last_name_pattern(n):
         if n.startswith('de ') or n.startswith('van ') or n.startswith('De ') or n.startswith('von '):
             return n
-        return second_lastname_re.sub('(?:[- ]\1)?', n)
+        return second_lastname_re.sub(r'(?:[- ]\1)?', n)
 
     def __expand_with_buergerorte(self, n, format=MatchFormat.SHAB_STD):
         result = '(?P<_' + str(self._names_idx[n]) + '>'
 
         lastname = self.__last_name_pattern(n.last)
         if format == MatchFormat.NAME_ONLY:
-            firstname = n.first + '(?: ' + ' '.join(n.middle) + '| ' + ' '.join(map(lambda s: s[0].upper() + '\\.', n.middle)) + ')?' if n.middle else n.first
+            firstname = n.first + r'(?:\s?' + r'\s?'.join(n.middle) + r'|\s?' + r'\s?'.join(map(lambda s: s[0].upper() + '\\.', n.middle)) + ')?' if n.middle else n.first
         else:
             firstname = n.first + '(?: ' + ' '.join(n.middle) + ')?' if n.middle else n.first
         buergerorte = list(map(lambda o: (o.strip() if o.find('(') == -1 else o[0:o.find('(')]).strip(), n.citizenships)) if n.citizenships else []
@@ -186,7 +186,7 @@ class NameMatcher:
         elif format == MatchFormat.SHAB_FR:
             result += '(?:' + firstname + '(?:[- ][^.,;\\- ]+)?(?:(?:[^.,;\\- ]+\\. ?)+| )' + lastname + ')'
         elif format == MatchFormat.NAME_ONLY:
-            result += '(?:' + firstname + '(?: |\xc2\xa0)+' + lastname + '|' + lastname + ',?(?: |\xc2\xa0)+' + firstname + ')'
+            result += '(?:' + firstname + '(?:\\s|\xc2\xa0)*' + lastname + '|' + lastname + ',?(?:\\s|\xc2\xa0)*' + firstname + ')'
         else:
             raise Exception(f'Unknown format: {format}')
 
