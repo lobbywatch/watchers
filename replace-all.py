@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import regex as re
 import sys
 from namematch.namematcher import MatchFormat, NameMatcher, Name
 from namematch.lobbywatch import PersonType
@@ -29,4 +30,4 @@ matches += lobby_matcher.match_content(stdin.encode(encoding='utf-8'), label=Non
 matches.sort(key=lambda m: m.start)
 for m in matches:
     emoji = m.name.id[0].emoji if type(m.name.id) is tuple else ''
-    print(f'{emoji}{str(m.message[m.start:m.end], "utf-8")}{emoji}')
+    print(re.sub('\\s+', ' ', f'{emoji}{str(m.message[m.start:m.end], "utf-8")}{emoji}'))
