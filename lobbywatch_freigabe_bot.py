@@ -375,7 +375,7 @@ if __name__ == "__main__":
               + "Super, haben Sie das bereits deklariert, %parlamentarier_mention%! %parlamentarier_page%",
         'fr': "#LobbyNews %parl_name% (%parl_partei%/%parl_kanton%) a un nouveau lien d'intérêt : "
               + "%parl_pronomen_fr% est %interessenbindung_funktion% de %organisation_name%. "
-              + "Super d'avoid déclaré cela, %parlamentarier_mention%? %parlamentarier_page%"
+              + "Super d'avoir déclaré cela, %parlamentarier_mention%! %parlamentarier_page%"
     }
 
     tunnel, connection = db_connection()
