@@ -4,7 +4,7 @@ select json_object(
    'middle', case zweiter_vorname when '' then null else zweiter_vorname end,
    'nick', case vorname_kurz when '' then null else vorname_kurz end,
    'last', nachname,
-   'citizenships', cast(concat('["', trim(replace(buergerorte, ';', '","')), '"]') as json)
+   'citizenships', concat('["', trim(replace(buergerorte, ';', '","')), '"]')
 ) json
 from person
 join zutrittsberechtigung z on person.id = z.person_id
