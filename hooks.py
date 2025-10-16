@@ -30,6 +30,7 @@ ConfigReportWaybackMachine = TypedDict(
 
 
 class NameMatchFilter(FilterBase):
+    """Custom filter to match persons from lobbywatch's database"""
     __kind__ = 'name_match'
     parl_names = []
     with open('parliamentarians.ndjson', 'r', encoding='utf-8') as f:
@@ -48,11 +49,8 @@ class NameMatchFilter(FilterBase):
     parl_matcher = NameMatcher(parl_names, formats=[MatchFormat.NAME_ONLY])
     lobby_matcher = NameMatcher(lobby_names, formats=[MatchFormat.NAME_ONLY])
 
-    def __init__(self, job: JobBase, state: JobState) -> None:
-        super().__init__(job, state)
-
-    def filter(self, data: Union[str, bytes], subfilter: Dict[str, Any], **kwargs) -> str:
-
+    @staticmethod
+    def filter(data: str | bytes, mime_type: str, subfilter: dict[str, Any]) -> tuple[str | bytes, str]:
         stdin = data.replace('\xc2\xa0', ' ').replace(' ', ' ')
         matches = NameMatchFilter.parl_matcher.match_content(stdin.encode(encoding='utf-8'), label=None, offset=0, format=MatchFormat.NAME_ONLY)
         matches += NameMatchFilter.lobby_matcher.match_content(stdin.encode(encoding='utf-8'), label=None, offset=0, format=MatchFormat.NAME_ONLY)
@@ -61,7 +59,7 @@ class NameMatchFilter(FilterBase):
         for m in matches:
             emoji = m.name.id[0].emoji if type(m.name.id) is tuple else ''
             result += re.sub('\\s+', ' ', f'{emoji}{str(m.message[m.start:m.end], "utf-8")}{emoji}') + '\n'
-        return result
+        return result, mime_type
 
 
 class WaybackMachineReporter(reporters.ReporterBase):
