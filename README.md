@@ -16,3 +16,28 @@ As an additional benefit the Slack notifications should also highlight the names
 4. Finally run `./urlwatch.sh` which will send a Slack notification
 
 Periodically the name list for the name matching should also be updated. This can be done using the `load-personen.sh` script.
+
+## Containerized setup
+
+### Build
+
+Container images is currently built locally.
+
+```shell
+# add connection for pushing images between hosts without a registry in-between
+podman system connection add infomaniak-vm ssh://almalinux@84.xxx.xx.xx
+
+podman build -t lobbywatch/website-updates .
+podman image scp lobbywatch/website-updates:latest infomaniak-vm::
+```
+
+### Run
+
+```shell
+# create secrets
+cat deploy-key-website-bot | podman secret create website-updates-repo-ssh-key -
+cat .env | podman secret create website-updates-env-file -
+
+# run container
+podman run --rm --secret website-updates-repo-ssh-key,target=/home/bot/.ssh/id_ed25519 --secret website-updates-env-file,target=/opt/website-updates/.env lobbywatch/website-updates
+```
