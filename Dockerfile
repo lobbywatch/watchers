@@ -1,6 +1,6 @@
 FROM python:3.13.7-slim-bookworm@sha256:adafcc17694d715c905b4c7bebd96907a1fd5cf183395f0ebc4d3428bd22d92d
 
-RUN apt-get update && apt-get install -y ssh git jq mariadb-client libxml2-dev libxslt-dev bash pipx && apt-get clean
+RUN apt-get update && apt-get install -y ssh git jq mariadb-client libxml2-dev libxslt-dev bash pipx nano && apt-get clean
 
 RUN useradd -u 1000 --create-home --shell /usr/bin/bash bot
 
