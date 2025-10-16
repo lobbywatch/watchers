@@ -6,11 +6,9 @@ import json
 import regex as re
 import logging
 import time
-from datetime import datetime
 from typing import Any, TypedDict, Union, Dict
 
 import requests
-from slack_sdk import WebClient
 from webchanges import reporters
 from webchanges.filters import FilterBase
 from webchanges.handler import JobState
@@ -64,26 +62,6 @@ class NameMatchFilter(FilterBase):
             emoji = m.name.id[0].emoji if type(m.name.id) is tuple else ''
             result += re.sub('\\s+', ' ', f'{emoji}{str(m.message[m.start:m.end], "utf-8")}{emoji}') + '\n'
         return result
-
-
-class CustomSlackReporter(reporters.TextReporter):
-    """Custom Slack reporter that uploads diff as file to Slack"""
-
-    __kind__ = 'custom_slack'
-
-    def submit(self):
-        text = '\n'.join(super().submit())
-        if text:
-            slack_token = self.config['token']
-            client = WebClient(token=slack_token)
-            timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-            response = client.files_upload(
-                channels=self.config['channel'],
-                filetype="diff",
-                content=text,
-                initial_comment="Report " + timestamp,
-                title=f"report-{datetime.now().strftime('%d.%m.%Y')}.txt"
-            )
 
 
 class WaybackMachineReporter(reporters.ReporterBase):
