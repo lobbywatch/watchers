@@ -27,17 +27,17 @@ Container images is currently built locally.
 # add connection for pushing images between hosts without a registry in-between
 podman system connection add infomaniak-vm ssh://almalinux@84.xxx.xx.xx
 
-podman build -t lobbywatch/website-updates .
-podman image scp lobbywatch/website-updates:latest infomaniak-vm::
+podman build -t lobbywatch/website-watcher .
+podman image scp lobbywatch/website-watcher:latest infomaniak-vm::
 ```
 
 ### Run
 
 ```shell
 # create secrets
-cat deploy-key-website-bot | podman secret create website-updates-repo-ssh-key -
-cat .env | podman secret create website-updates-env-file -
+cat deploy-key-website-bot | podman secret create website-watcher-repo-ssh-key -
+cat .env | podman secret create website-watcher-env-file -
 
 # run container
-podman run --rm --secret website-updates-repo-ssh-key,target=/home/bot/.ssh/id_ed25519 --secret website-updates-env-file,target=/opt/website-updates/.env lobbywatch/website-updates
+podman run --rm --secret website-watcher-repo-ssh-key,target=/home/bot/.ssh/id_ed25519 --secret website-watcher-env-file,target=/opt/website-watcher/.env lobbywatch/website-watcher
 ```

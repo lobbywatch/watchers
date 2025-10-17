@@ -13,11 +13,11 @@ RUN mkdir /home/bot/.ssh && echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAA
 
 RUN pipx install poetry
 
-WORKDIR /opt/website-updates
+WORKDIR /opt/website-watcher
 
 # TODO build from git repo, not local source
 ADD --chown=1000 . . 
 
 RUN poetry install --no-root
 
-ENTRYPOINT ['/opt/website-updates/run.sh']
+ENTRYPOINT ["/opt/website-watcher/run.sh"]
