@@ -1,21 +1,24 @@
 import sys
 from os.path import dirname, realpath
+
 sys.path.append(dirname(realpath(__file__)))
 
+import io
 import json
 import logging
+import os
 import time
+from datetime import datetime
 from typing import Any, Iterable, TypedDict
 
 import regex as re
 import requests
+from minio import Minio
 from webchanges import reporters
 from webchanges.filters import FilterBase
 
 from namematch.lobbywatch import PersonType
 from namematch.namematcher import MatchFormat, Name, NameMatcher
-
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -130,3 +133,60 @@ class WaybackMachineReporter(reporters.ReporterBase):
                     time.sleep(sleep)
             except requests.RequestException as e:
                 logger.error("Submission failed for %s: %s", location, e)
+
+
+class ObjectStorageUploader(reporters.HtmlReporter):
+    """Custom reporter that uploads the HTML report to an S3-compatible object storage
+    and (optionally) posts the URL into a Mattermost channel.
+
+    .. code-block:: yaml
+
+       report:
+         object_storage_uploader:
+           enabled: true
+    """
+
+    __kind__ = "object_storage_uploader"
+
+    def submit(self, **kwargs: Any) -> Iterable[str]:
+        endpoint = os.environ["OBJECT_STORAGE_UPLOADER_ENDPOINT"]
+        bucket_name = os.environ["OBJECT_STORAGE_UPLOADER_BUCKET_NAME"]
+        access_key = os.environ["OBJECT_STORAGE_UPLOADER_ACCESS_KEY"]
+        secret_key = os.environ["OBJECT_STORAGE_UPLOADER_SECRET_KEY"]
+        region = "us-east-1"
+        client = Minio(
+            endpoint=endpoint,
+            access_key=access_key,
+            secret_key=secret_key,
+            region=region,
+            secure=True,
+        )
+        logger.info("uploading report to %s", endpoint)
+
+        object_name = f"reports/{datetime.now().isoformat()}-report.html"
+        s = "\n".join(super().submit())
+        data = io.BytesIO(s.encode("utf-8"))
+
+        result = client.put_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            data=data,
+            length=len(s),
+            content_type="text/html",
+        )
+
+        logger.info('object "%s" uploaded', object_name)
+
+        webhook = os.environ.get("OBJECT_STORAGE_UPLOADER_NOTIFY_WEBHOOK")
+
+        if webhook:
+            link = f"https://{endpoint}/{bucket_name}/{result.object_name}"
+            res = requests.post(webhook, data={"text": link}, timeout=10)
+            if res.ok:
+                logger.info("notified webhook about upload")
+            else:
+                logger.error(
+                    "failed to notify webhook: %s (status %s)",
+                    res.text,
+                    res.status_code,
+                )
