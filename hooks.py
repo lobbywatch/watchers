@@ -164,14 +164,19 @@ class ObjectStorageUploader(reporters.HtmlReporter):
         logger.info("uploading report to %s", endpoint)
 
         object_name = f"reports/{datetime.now().isoformat()}-report.html"
-        s = "\n".join(super().submit())
-        data = io.BytesIO(s.encode("utf-8"))
+        html_report = "\n".join(super().submit())
+
+        if not html_report:
+            logger.info("not uploading empty report")
+            return
+
+        data = io.BytesIO(html_report.encode("utf-8"))
 
         result = client.put_object(
             bucket_name=bucket_name,
             object_name=object_name,
             data=data,
-            length=len(s),
+            length=len(html_report),
             content_type="text/html",
         )
 
