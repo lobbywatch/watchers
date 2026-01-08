@@ -28,7 +28,7 @@ def create_parliamentarian_names(mycursor, ref_date, name_set):
         #     and coalesce(bis, now()) >= now()
         # )
         where coalesce(im_rat_bis, now()) >= now()
-          and (%(match_current)s or pa.freigabe_datum is null) 
+          and (%(match_current)s or pa.freigabe_datum is null)
         order by 1, 3
     """,
         {"date": ref_date, "match_current": name_set == NameSet.CURRENT},
@@ -85,7 +85,7 @@ def create_lobbyist_names(mycursor, ref_date, name_set):
         where coalesce(z.bis, now()) >= now()
           and coalesce(pa.im_rat_bis, now()) >= now()
           and coalesce(p.buergerorte, '') != 'Unbekannt'
-          and (%(match_current)s or p.freigabe_datum is null) 
+          and (%(match_current)s or p.freigabe_datum is null)
         order by 1, 3
     """,
         {"date": ref_date, "match_current": name_set == NameSet.CURRENT},

@@ -32,7 +32,7 @@ registries = {}
 colon_re = re.compile("(?!\\B\\[[^]]*):(?![^\\[]*]\\B)")
 semicolon_re = re.compile("(?!\\B\\[[^]]*);(?![^\\[]*]\\B)")
 ft_type_re = re.compile('<FT TYPE=".">([^<]+)</FT>')
-content_key_split_re = re.compile("\\. ([^:0-9,.;[\]]+):".encode("utf-8"))
+content_key_split_re = re.compile("\\. ([^:0-9,.;[\\]]+):".encode("utf-8"))
 
 parser = argparse.ArgumentParser(description="Process SHAB publications.")
 parser.add_argument(
