@@ -7,6 +7,7 @@ import os
 import sqlite3
 from datetime import date, datetime, timedelta
 from pathlib import Path
+import time
 
 import mysql.connector
 import ndjson
@@ -283,7 +284,7 @@ class DatabaseProcessor(MatchProcessor):
 
 
 class SlackProcessor(MatchProcessor):
-    text_blocks = []
+    messages = []
     current_block = None
 
     def __init__(self, args):
@@ -300,55 +301,33 @@ class SlackProcessor(MatchProcessor):
         ).strftime("%d.%m.%Y")
         zefix_publ_url = f"https://www.zefix.ch/en/search/entity/list/firm/{ehraid}#shabPub-{publ_id}"
         self.current_block = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"<{reg_company_url}|{company_name}> - {journal_date} <{zefix_publ_url}|{publ_id}>/{canton}",
-            },
-            "accessory": {
-                "type": "checkboxes",
-                "options": [],
-                "action_id": f"publication_matches-{publ_id}",
-            },
+            "attachments": [],
+            "text": f"[{company_name}]({reg_company_url}) - {journal_date} [{publ_id}]({zefix_publ_url}) / {canton}",
         }
-        self.text_blocks.append(self.current_block)
+        self.messages.append(self.current_block)
 
     def process_publ(self, publ, match):
         emoji = match.name.id[0].emoji if type(match.name.id) is tuple else ""
         if namematch.lobbywatch.is_ambiguous_name(match.name):
             emoji += "⚠️"
         desc = match.format(emoji)
-        self.current_block["accessory"]["options"].append(
+        self.current_block["attachments"].append(
             {
-                "text": {
-                    "type": "plain_text",
-                    "text": str(match.label, "utf-8") if match.label else "???",
-                },
-                "description": {
-                    "type": "mrkdwn",
-                    "text": desc[:147] + (desc[147:] and "..."),
-                },
-                "value": "match_at_offset-" + str(match.message_offset),
+                "title": str(match.label, "utf-8") if match.label else "???",
+                "text": desc[:147] + (desc[147:] and "..."),
             }
         )
 
     def finalize(self):
         if self.args.json_channel == "slack":
-            # TODO add leading section about date and number of publications
-            resp = requests.post(
-                config["SLACK_WEBHOOK_URL"], json={"blocks": self.text_blocks}
-            )
-            if resp.status_code != 200:
-                print(resp.text, json.dumps(self.text_blocks, indent=2))
-        elif self.args.json_channel == "slack-test":
-            # TODO add leading section about date and number of publications
-            resp = requests.post(
-                config["SLACK_TEST_WEBHOOK_URL"], json={"blocks": self.text_blocks}
-            )
-            if resp.status_code != 200:
-                print(resp.text, json.dumps(self.text_blocks, indent=2))
+            for message in self.messages:
+                resp = requests.post(config["SLACK_WEBHOOK_URL"], json=message)
+                if resp.status_code != 200:
+                    print(resp.text, json.dumps(message, indent=2))
+                time.sleep(1)
+
         elif self.args.json_channel == "console":
-            print(json.dumps(self.text_blocks, indent=2))
+            print(json.dumps(self.messages, indent=2))
 
 
 def get_registry_company_url(publ):
