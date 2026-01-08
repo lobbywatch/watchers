@@ -114,21 +114,22 @@ def load_publications(ref_date, cache_dir):
                     with open(zefix_file, "x") as f:
                         json_data = json.loads(resp.content)
                         ndjson.dump(json_data, f)
-                        sqlite_cur.executemany(
-                            "insert into zefix(company_name, company_ehraid, publ_date, publ_id, publ_message) values (?,?,?,?,?)",
-                            [
-                                (
-                                    r["companyShort"]["name"],
-                                    r["companyShort"]["ehraid"],
-                                    r["sogcPublication"][
-                                        "registryOfCommerceJournalDate"
-                                    ],
-                                    r["sogcPublication"]["sogcId"],
-                                    r["sogcPublication"]["message"],
-                                )
-                                for r in json_data
-                            ],
-                        )
+                        # TODO is this really needed?
+                        # sqlite_cur.executemany(
+                        #     "insert into zefix(company_name, company_ehraid, publ_date, publ_id, publ_message) values (?,?,?,?,?)",
+                        #     [
+                        #         (
+                        #             r["companyShort"]["name"],
+                        #             r["companyShort"]["ehraid"],
+                        #             r["sogcPublication"][
+                        #                 "registryOfCommerceJournalDate"
+                        #             ],
+                        #             r["sogcPublication"]["sogcId"],
+                        #             r["sogcPublication"]["message"],
+                        #         )
+                        #         for r in json_data
+                        #     ],
+                        # )
     with open(zefix_file, "r", encoding="utf-8") as f:
         return ndjson.load(f)
 
