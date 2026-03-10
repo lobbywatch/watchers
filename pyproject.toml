@@ -8,9 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.13"
 requests = "^2.32.5"
-webchanges = "^3.31.3"
 regex = "^2025.9.18"
-minio = "^7.2.18"
+fastapi = {extras = ["standard"], version = "^0.135.1"}
 
 
 [build-system]
