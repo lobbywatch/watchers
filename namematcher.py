@@ -165,7 +165,7 @@ class NameMatcher:
                         )
                     )
 
-    def match_text(self, text: str, format: MatchFormat) -> List[NameMatch]:
+    def match_text(self, text: bytes, format: MatchFormat) -> List[NameMatch]:
         res = []
         regex = self._regex[format]
         for m in regex.finditer(text):
