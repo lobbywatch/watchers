@@ -1,13 +1,22 @@
 import sys
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, List, Tuple
 
 import regex as re
 
+class NameSet(Enum):
+    CURRENT = 1
+    RESEARCH = 2
 
-# AnyStr = str | bytes
 
+class PersonType(Enum):
+    PARLIAMENTARIAN = '\U0001F64B'
+    LOBBYIST = '👻'
+    OTHER = '👑'
+
+    def __init__(self, emoji):
+        self.emoji = emoji
 
 class MatchFormat(Enum):
     SHAB_STD = 1
@@ -18,7 +27,7 @@ class MatchFormat(Enum):
 
 @dataclass(frozen=True)
 class Name:
-    id: Any
+    id: Tuple[PersonType, str]
     first: str
     middle: tuple[str, ...] = field(compare=False)
     nick: str
@@ -52,7 +61,7 @@ second_lastname_re = re.compile("[- ](.*)")
 
 
 class NameMatcher:
-    def __init__(self, names: list[Name], formats: list[MatchFormat] = None):
+    def __init__(self, names: list[Name], formats: list[MatchFormat] = []):
         self._names_idx = {}
         for idx, n in enumerate(names):
             self._names_idx[idx] = n
@@ -156,7 +165,7 @@ class NameMatcher:
                         )
                     )
 
-    def match_text(self, text, format):
+    def match_text(self, text: str, format: MatchFormat) -> List[NameMatch]:
         res = []
         regex = self._regex[format]
         for m in regex.finditer(text):
