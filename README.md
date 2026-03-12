@@ -1,43 +1,37 @@
-# Lobbywatch Resources
+# Website watcher notification filter
 
-## Prototype Based on `urlwatch`
+Receives webhooks from our [changedetection.io](https://changedetection.io) instance and passes them on to kChat if
+the change contains a name we are about.
 
-`urlwatch` is a command-line utility which allows checking for changes to web pages. The state (from previous runs) is by default persisted in a SQLite database (Redis being the other alternative).
+## Develop
 
-For Lobbywatch the idea is to run the tool periodically (e.g. once per day) and notify the team using a dedicated Slack channel.
-
-As an additional benefit the Slack notifications should also highlight the names matching persons (and parlamentarians) in the Lobbywatch database.
-
-### Usage
-
-1. Research the page to add and figure out what CSS selector to apply
-2. Add the page definition to `urls-test.yaml` and test the output using `./urlwatch-test.sh`
-3. Once satisfied transfer the page to `urls.yaml` and run `./urlwatch-import.sh <n>` where `<n>` is the job number
-4. Finally run `./urlwatch.sh` which will send a Slack notification
-
-Periodically the name list for the name matching should also be updated. This can be done using the `load-personen.sh` script.
+```sh
+# create config.toml from config.toml.example
+poetry install --no-root
+poetry run fastapi dev
+curl -X POST -d '{"watch_url":"https://test.ch","diff":"hans peter","diff_url":"https://some.com","huh":1}' -H 'content-type: application/json' -H 'X-Access-Token: verysecret' http://localhost:8000/change
+```
 
 ## Containerized setup
 
 ### Build
 
-Container images is currently built locally.
+Container image is currently built locally.
 
 ```shell
 # add connection for pushing images between hosts without a registry in-between
-podman system connection add infomaniak-vm ssh://almalinux@84.xxx.xx.xx
-
+podman system connection add infomaniak-apps-vm ssh://debian@analyse.lobbywatch.ch
 podman build -t lobbywatch/website-watcher .
-podman image scp lobbywatch/website-watcher:latest infomaniak-vm::
+# copy image to VM
+podman image scp lobbywatch/website-watcher:latest infomaniak-app-vm::
+# copy to root registry
+podman image scp debian@localhost::lobbywatch/website-watcher root@localhost::
 ```
 
 ### Run
 
 ```shell
-# create secrets
-cat deploy-key-website-bot | podman secret create website-watcher-repo-ssh-key -
-cat .env | podman secret create website-watcher-env-file -
-
-# run container
-podman run --rm --secret website-watcher-repo-ssh-key,target=/home/bot/.ssh/id_ed25519 --secret website-watcher-env-file,target=/opt/website-watcher/.env lobbywatch/website-watcher
+cat config.toml | podman secret create website-watcher-config -
+podman run --rm --secret website-watcher-config,target=/opt/app/config.toml lobbywatch/website-watcher
 ```
+
