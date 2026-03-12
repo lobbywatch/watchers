@@ -1,12 +1,13 @@
 import json
 import logging
 import os
-from typing import Dict, List, Annotated
+from typing import Annotated, Dict, List
 
 import requests
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException
 from pydantic import BaseModel, HttpUrl
 
+import config
 import nameloader
 from namematcher import MatchFormat, NameMatch, NameMatcher
 
@@ -15,8 +16,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-WEBHOOK_URL = os.environ["OBJECT_STORAGE_UPLOADER_NOTIFY_WEBHOOK"]
-ACCESS_TOKEN = os.environ["WW_ACCESS_TOKEN"]
+CHAT_WEBHOOK = config.get_key("CHAT_WEBHOOK")
+ACCESS_TOKEN = config.get_key("ACCESS_TOKEN")
 
 
 class ChangeNotification(BaseModel):
@@ -54,7 +55,7 @@ def notify_chat(
 ) -> None:
     data = build_chat_message(change_notification, matches)
     res = requests.post(
-        WEBHOOK_URL,
+        CHAT_WEBHOOK,
         data=json.dumps(data),
         headers={"content-type": "application/json"},
         timeout=10,

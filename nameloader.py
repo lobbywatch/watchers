@@ -1,4 +1,4 @@
-import os
+import config
 import json
 from typing import List
 import mariadb
@@ -33,10 +33,10 @@ order by person.id;
 """
 
 conn_params = {
-    "user": os.environ["DB_USER"],
-    "password": os.environ["DB_PASSWORD"],
-    "host": os.environ["DB_HOST"],
-    "database": os.environ["DB_DATABASE"],
+    "user": config.get_key("DB_USER"),
+    "password": config.get_key("DB_PASSWORD"),
+    "host": config.get_key("DB_HOST"),
+    "database": config.get_key("DB_DATABASE"),
 }
 pool = mariadb.ConnectionPool(pool_name="myfirstpool", pool_size=3, **conn_params)
 

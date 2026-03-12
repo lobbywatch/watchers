@@ -5,5 +5,5 @@ __pycache__/
 
 /.idea
 *.env
+config.toml
 
-/urls-test.yaml
