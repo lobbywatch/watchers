@@ -1,0 +1,19 @@
+FROM python:3.14.3-slim-trixie@sha256:586f424e29bbb3bc840dd9759d90d20692641fd62c251fe5a88e19a55a0d9c79
+
+RUN apt-get update && apt-get install -y libmariadb-dev-compat gcc && apt-get clean
+
+RUN useradd -u 1000 --create-home --shell /usr/bin/bash bot
+
+ENV PATH=/home/bot/.local/bin:$PATH
+
+USER bot
+
+RUN pip --no-cache-dir install poetry
+
+WORKDIR /opt/app
+
+COPY . .
+
+RUN poetry install --no-root
+
+CMD ["poetry", "run", "fastapi", "run", "main.py", "--port", "8000"]
