@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from typing import Annotated, Dict, List
 
 import requests
@@ -12,8 +11,9 @@ import nameloader
 from namematcher import MatchFormat, NameMatch, NameMatcher
 
 app = FastAPI()
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 CHAT_WEBHOOK = config.get_key("CHAT_WEBHOOK")
@@ -36,6 +36,7 @@ async def receive_change(
     if x_access_token != ACCESS_TOKEN:
         raise HTTPException(status_code=401)
 
+    logger.info("received change notification: %s", change_notification)
     background_tasks.add_task(check_for_matches, change_notification)
     return {"ok": True}
 
@@ -47,7 +48,7 @@ def check_for_matches(change_notification: ChangeNotification):
     if matches:
         notify_chat(change_notification, matches)
     else:
-        logger.info("no matches, not notifying", change_notification)
+        logger.info("no matches, not notifying")
 
 
 def notify_chat(
@@ -61,10 +62,10 @@ def notify_chat(
         timeout=10,
     )
     if res.ok:
-        logger.info("notified webhook about upload")
+        logger.info("chat notified")
     else:
         logger.error(
-            "failed to notify webhook: %s (status %s)",
+            "failed to notify chat: %s (status %s)",
             res.text,
             res.status_code,
         )
