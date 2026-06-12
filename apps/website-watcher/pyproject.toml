@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "website-watcher"
+version = "0.1.0"
+description = ""
+authors = ["dev@lobbywatch.ch"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.14"
+requests = "^2.32.5"
+fastapi = {extras = ["standard"], version = "^0.135.1"}
+mariadb = "^1.1.14"
+namematch = {path = "../../libs/namematch"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
