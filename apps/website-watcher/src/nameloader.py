@@ -3,7 +3,7 @@ import json
 from typing import List
 import mariadb
 
-from namematcher import Name, PersonType
+from namematch.namematcher import Name, PersonType
 
 parliamentarians_sql = """select json_object(
     'id', id,

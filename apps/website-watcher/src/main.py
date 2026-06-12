@@ -8,7 +8,7 @@ from pydantic import BaseModel, HttpUrl
 
 import config
 import nameloader
-from namematcher import MatchFormat, NameMatch, NameMatcher
+from namematch.namematcher import MatchFormat, NameMatch, NameMatcher
 
 app = FastAPI()
 

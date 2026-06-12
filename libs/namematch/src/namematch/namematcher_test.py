@@ -1,5 +1,5 @@
 import unittest
-import namematcher
+from namematch import namematcher
 
 format_map = {
     "std": namematcher.MatchFormat.SHAB_STD,
