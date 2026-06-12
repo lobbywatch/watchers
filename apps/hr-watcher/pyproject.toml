@@ -13,9 +13,9 @@ dependencies = [
     "mysql-connector-python (>=9.5.0,<10.0.0)",
     "ndjson (>=0.3.1,<0.4.0)",
     "paramiko (>=4.0.0,<5.0.0)",
-    "regex (>=2025.11.3,<2026.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
-    "sshtunnel (>=0.4.0,<0.5.0)"
+    "sshtunnel (>=0.4.0,<0.5.0)",
+    "namematch @ file:///home/bjorndown/projects/lobbywatch/hr-watcher/libs/namematch"
 ]
 
 
