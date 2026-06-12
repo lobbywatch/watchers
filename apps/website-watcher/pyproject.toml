@@ -1,12 +1,14 @@
-[tool.poetry]
+[project]
 name = "website-watcher"
 version = "0.1.0"
 description = ""
-authors = ["dev@lobbywatch.ch"]
+authors = [ 
+    {name = "", email = "dev@lobbywatch.ch" }
+]
 readme = "README.md"
+requires-python = ">=3.14"
 
 [tool.poetry.dependencies]
-python = "^3.14"
 requests = "^2.32.5"
 fastapi = {extras = ["standard"], version = "^0.135.1"}
 mariadb = "^1.1.14"

@@ -3,7 +3,7 @@ name = "namematch"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "", email = "dev@lobbywatch.ch"}
 ]
 readme = "README.md"
 requires-python = ">=3.14"
