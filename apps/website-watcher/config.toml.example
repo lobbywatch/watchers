@@ -4,4 +4,4 @@ DB_PORT = 3306
 DB_USER = "user"
 DB_PASSWORD = "pw" 
 DB_DATABASE = "db"
-WW_ACCESS_TOKEN = "token"
+ACCESS_TOKEN = "token"

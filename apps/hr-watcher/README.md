@@ -1,23 +1,14 @@
 # HR (Handelsregister) watcher
 
-## Build
+Checks HR mutations for names of interest to Lobbywatch.
 
-Container image is currently built locally.
-
-```shell
-# add connection for pushing images between hosts without a registry in-between
-podman system connection add infomaniak-vm ssh://almalinux@84.xxx.xx.xx
-
-podman build -t lobbywatch/hr-watcher .
-podman image scp lobbywatch/hr-watcher:latest infomaniak-vm::
-```
-
-### Run
+## Run locally
 
 ```shell
-# create secrets
-cat .env | podman secret create hr-watcher-env-file -
-
-# run container
-podman run --rm --secret hr-watcher-env-file,target=/opt/hr-watcher/.env lobbywatch/hr-watcher
+cp env.example .env
+poetry run python src/shab-download.py -h
 ```
+
+## Run in production
+
+See [infrastructure repo](https://github.com/lobbywatch/infrastructure)
