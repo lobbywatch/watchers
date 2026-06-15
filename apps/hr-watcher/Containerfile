@@ -6,7 +6,6 @@ RUN pip install poetry
 
 WORKDIR /opt/app
 
-# TODO build from git repo, not local source
 ADD . . 
 
 WORKDIR /opt/app/apps/hr-watcher
