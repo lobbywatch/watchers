@@ -1,4 +1,4 @@
-FROM python:3.14.3-slim-trixie@sha256:586f424e29bbb3bc840dd9759d90d20692641fd62c251fe5a88e19a55a0d9c79
+FROM python:3.14.9-slim-trixie@sha256:a145a961ec2cf5741772d5e39773d979271132884fd778f6c3fad34e52b85402
 
 RUN apt-get update && apt-get install -y libmariadb-dev-compat gcc && apt-get clean
 
